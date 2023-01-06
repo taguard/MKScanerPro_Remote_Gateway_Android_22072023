@@ -201,7 +201,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             mMokoDevice.mqttInfo = new Gson().toJson(mqttConfig, MQTTConfig.class);
             DBTools.getInstance(this).updateDevice(mMokoDevice);
             // 跳转首页，刷新数据
-            Intent intent = new Intent(this, ScannerMainActivity.class);
+            Intent intent = new Intent(this, RemoteMainActivity.class);
             intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
             intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
             startActivity(intent);

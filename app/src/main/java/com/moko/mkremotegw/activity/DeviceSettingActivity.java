@@ -160,7 +160,7 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingBin
                 mBind.tvName.postDelayed(() -> {
                     dismissLoadingProgressDialog();
                     // 跳转首页，刷新数据
-                    Intent intent = new Intent(this, ScannerMainActivity.class);
+                    Intent intent = new Intent(this, RemoteMainActivity.class);
                     intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
                     startActivity(intent);
                 }, 500);

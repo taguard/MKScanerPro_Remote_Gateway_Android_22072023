@@ -83,7 +83,7 @@ public class GuideActivity extends BaseActivity<ActivityGuideBinding> {
 
     private void gotoMain() {
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            startActivity(new Intent(this, ScannerMainActivity.class));
+            startActivity(new Intent(this, RemoteMainActivity.class));
             finish();
         }, 1000);
     }

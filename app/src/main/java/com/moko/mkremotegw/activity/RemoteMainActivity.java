@@ -21,7 +21,7 @@ import com.moko.mkremotegw.BuildConfig;
 import com.moko.mkremotegw.R;
 import com.moko.mkremotegw.adapter.DeviceAdapter;
 import com.moko.mkremotegw.base.BaseActivity;
-import com.moko.mkremotegw.databinding.ActivityMainScannerBinding;
+import com.moko.mkremotegw.databinding.ActivityMainRemoteBinding;
 import com.moko.mkremotegw.db.DBTools;
 import com.moko.mkremotegw.dialog.AlertMessageDialog;
 import com.moko.mkremotegw.entity.MQTTConfig;
@@ -59,7 +59,7 @@ import java.util.ArrayList;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-public class ScannerMainActivity extends BaseActivity<ActivityMainScannerBinding> implements BaseQuickAdapter.OnItemClickListener, BaseQuickAdapter.OnItemLongClickListener {
+public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> implements BaseQuickAdapter.OnItemClickListener, BaseQuickAdapter.OnItemLongClickListener {
 
     private ArrayList<MokoDevice> devices;
     private DeviceAdapter adapter;
@@ -128,8 +128,8 @@ public class ScannerMainActivity extends BaseActivity<ActivityMainScannerBinding
     }
 
     @Override
-    protected ActivityMainScannerBinding getViewBinding() {
-        return ActivityMainScannerBinding.inflate(getLayoutInflater());
+    protected ActivityMainRemoteBinding getViewBinding() {
+        return ActivityMainRemoteBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -294,7 +294,7 @@ public class ScannerMainActivity extends BaseActivity<ActivityMainScannerBinding
             ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
-        Intent i = new Intent(ScannerMainActivity.this, DeviceDetailActivity.class);
+        Intent i = new Intent(RemoteMainActivity.this, DeviceDetailActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mokoDevice);
         startActivity(i);
     }
@@ -309,7 +309,7 @@ public class ScannerMainActivity extends BaseActivity<ActivityMainScannerBinding
         dialog.setMessage("Please confirm again whether to \n remove the device");
         dialog.setOnAlertConfirmListener(() -> {
             if (!MQTTSupport.getInstance().isConnected()) {
-                ToastUtils.showToast(ScannerMainActivity.this, R.string.network_error);
+                ToastUtils.showToast(RemoteMainActivity.this, R.string.network_error);
                 return;
             }
             showLoadingProgressDialog();
@@ -320,7 +320,7 @@ public class ScannerMainActivity extends BaseActivity<ActivityMainScannerBinding
                 e.printStackTrace();
             }
             XLog.i(String.format("删除设备:%s", mokoDevice.nickName));
-            DBTools.getInstance(ScannerMainActivity.this).deleteDevice(mokoDevice);
+            DBTools.getInstance(RemoteMainActivity.this).deleteDevice(mokoDevice);
             EventBus.getDefault().post(new DeviceDeletedEvent(mokoDevice.id));
             devices.remove(mokoDevice);
             adapter.replaceData(devices);

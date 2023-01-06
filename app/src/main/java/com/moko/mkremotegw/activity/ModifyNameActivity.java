@@ -69,7 +69,7 @@ public class ModifyNameActivity extends BaseActivity<ActivityModifyDeviceNameBin
         device.nickName = nickName;
         DBTools.getInstance(this).updateDevice(device);
         // 跳转首页，刷新数据
-        Intent intent = new Intent(this, ScannerMainActivity.class);
+        Intent intent = new Intent(this, RemoteMainActivity.class);
         intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
         intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, device.deviceId);
         startActivity(intent);
