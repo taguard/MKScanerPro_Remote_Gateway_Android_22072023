@@ -76,10 +76,16 @@ public class UserFragment extends Fragment {
 
     public void setUserName(String username) {
         this.username = username;
+        if (mBind == null)
+            return;
+        mBind.etMqttUsername.setText(username);
     }
 
     public void setPassword(String password) {
         this.password = password;
+        if (mBind == null)
+            return;
+        mBind.etMqttPassword.setText(password);
     }
 
     public String getUsername() {

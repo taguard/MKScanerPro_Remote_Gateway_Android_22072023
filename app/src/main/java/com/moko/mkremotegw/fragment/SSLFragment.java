@@ -130,18 +130,48 @@ public class SSLFragment extends Fragment {
 
     public void setConnectMode(int connectMode) {
         this.connectMode = connectMode;
+        if (mBind == null)
+            return;
+        mBind.clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
+        mBind.cbSsl.setChecked(connectMode > 0);
+        if (connectMode > 0) {
+            selected = connectMode - 1;
+            mBind.tvCertification.setText(values.get(selected));
+            if (selected == 0) {
+                mBind.llCa.setVisibility(View.GONE);
+                mBind.llClientKey.setVisibility(View.GONE);
+                mBind.llClientCert.setVisibility(View.GONE);
+            } else if (selected == 1) {
+                mBind.llCa.setVisibility(View.VISIBLE);
+                mBind.llClientKey.setVisibility(View.GONE);
+                mBind.llClientCert.setVisibility(View.GONE);
+            } else if (selected == 2) {
+                mBind.llCa.setVisibility(View.VISIBLE);
+                mBind.llClientKey.setVisibility(View.VISIBLE);
+                mBind.llClientCert.setVisibility(View.VISIBLE);
+            }
+        }
     }
 
     public void setCAPath(String caPath) {
         this.caPath = caPath;
+        if (mBind == null)
+            return;
+        mBind.tvCaFile.setText(caPath);
     }
 
     public void setClientKeyPath(String clientKeyPath) {
         this.clientKeyPath = clientKeyPath;
+        if (mBind == null)
+            return;
+        mBind.tvClientKeyFile.setText(clientKeyPath);
     }
 
     public void setClientCertPath(String clientCertPath) {
         this.clientCertPath = clientCertPath;
+        if (mBind == null)
+            return;
+        mBind.tvClientCertFile.setText(clientCertPath);
     }
 
     public void selectCertificate() {

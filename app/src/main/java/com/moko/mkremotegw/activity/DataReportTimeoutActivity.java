@@ -9,23 +9,21 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mkremotegw.AppConstants;
 import com.moko.mkremotegw.R;
 import com.moko.mkremotegw.base.BaseActivity;
-import com.moko.mkremotegw.databinding.ActivityDataReportTimeoutBinding;
+import com.moko.mkremotegw.databinding.ActivityDataReportTimeoutRemoteBinding;
 import com.moko.mkremotegw.entity.MQTTConfig;
 import com.moko.mkremotegw.entity.MokoDevice;
 import com.moko.mkremotegw.utils.SPUtiles;
 import com.moko.mkremotegw.utils.ToastUtils;
 import com.moko.support.remotegw.MQTTConstants;
 import com.moko.support.remotegw.MQTTSupport;
-import com.moko.support.remotegw.entity.DataReportTimeout;
 import com.moko.support.remotegw.entity.MsgConfigResult;
-import com.moko.support.remotegw.entity.MsgDeviceInfo;
 import com.moko.support.remotegw.entity.MsgReadResult;
 import com.moko.support.remotegw.event.DeviceOnlineEvent;
 import com.moko.support.remotegw.event.MQTTMessageArrivedEvent;
-import com.moko.support.remotegw.handler.MQTTMessageAssembler;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -33,31 +31,32 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTimeoutBinding> {
-
+public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTimeoutRemoteBinding> {
 
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
+    private String mAppTopic;
 
     public Handler mHandler;
 
     @Override
     protected void onCreate() {
+        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
-        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
+        mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
         mHandler = new Handler(Looper.getMainLooper());
-        showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             finish();
         }, 30 * 1000);
+        showLoadingProgressDialog();
         getDataReportTimeout();
     }
 
     @Override
-    protected ActivityDataReportTimeoutBinding getViewBinding() {
-        return ActivityDataReportTimeoutBinding.inflate(getLayoutInflater());
+    protected ActivityDataReportTimeoutRemoteBinding getViewBinding() {
+        return ActivityDataReportTimeoutRemoteBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -77,23 +76,22 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
             return;
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_DATA_REPORT_TIMEOUT) {
-            Type type = new TypeToken<MsgReadResult<DataReportTimeout>>() {
+            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
             }.getType();
-            MsgReadResult<DataReportTimeout> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.etReportTimeout.setText(String.valueOf(result.data.timeout / 50));
+            int timeout = result.data.get("timeout").getAsInt();
+            mBind.etDataReportTimeout.setText(MokoUtils.getDecimalFormat("0.#").format(timeout * 0.02f));
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_DATA_REPORT_TIMEOUT) {
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
             MsgConfigResult result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
@@ -106,35 +104,20 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
-            return;
-        }
-        boolean online = event.isOnline();
-        if (!online) {
-            finish();
-        }
+        super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
     private void setDataReportTimeout(int timeout) {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        DataReportTimeout reportTimeout = new DataReportTimeout();
-        reportTimeout.timeout = timeout * 50;
-        String message = MQTTMessageAssembler.assembleWriteDataReportTimeout(deviceInfo, reportTimeout);
+        int msgId = MQTTConstants.CONFIG_MSG_ID_DATA_REPORT_TIMEOUT;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("timeout", timeout);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_DATA_REPORT_TIMEOUT, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -142,27 +125,18 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
 
 
     private void getDataReportTimeout() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadDataReportTimeout(deviceInfo);
+        int msgId = MQTTConstants.READ_MSG_ID_DATA_REPORT_TIMEOUT;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_DATA_REPORT_TIMEOUT, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
-    public void onConfirm(View view) {
-        if (isWindowLocked())
-            return;
-        String timeoutStr = mBind.etReportTimeout.getText().toString();
+    public void onSave(View view) {
+        if (isWindowLocked()) return;
+        String timeoutStr = mBind.etDataReportTimeout.getText().toString();
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -176,7 +150,7 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
             return;
         }
         int timeout = Integer.parseInt(timeoutStr);
-        if (timeout < 0 || timeout > 60) {
+        if (timeout > 60) {
             ToastUtils.showToast(this, "Para Error");
             return;
         }
@@ -185,6 +159,6 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
             ToastUtils.showToast(this, "Set up failed");
         }, 30 * 1000);
         showLoadingProgressDialog();
-        setDataReportTimeout(timeout);
+        setDataReportTimeout(timeout * 50);
     }
 }

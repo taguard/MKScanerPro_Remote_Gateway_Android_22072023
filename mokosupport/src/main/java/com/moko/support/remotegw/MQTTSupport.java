@@ -479,7 +479,10 @@ public class MQTTSupport {
             @Override
             public void messageArrived(String topic, MqttMessage message) {
                 String messageInfo = new String(message.getPayload());
-                XLog.w(String.format("Message:%s:%s", topic, messageInfo));
+                if (message.isRetained())
+                    XLog.w(String.format("Retain,Message:%s:%s", topic, messageInfo));
+                else
+                    XLog.w(String.format("Message:%s:%s", topic, messageInfo));
                 EventBus.getDefault().post(new MQTTMessageArrivedEvent(topic, new String(message.getPayload())));
             }
         });

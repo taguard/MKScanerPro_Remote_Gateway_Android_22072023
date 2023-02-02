@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -42,6 +41,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
@@ -58,8 +59,6 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
     private boolean isPasswordError;
     private String mPassword;
     private String mSavedPassword;
-    private String mSelectedName;
-    private String mSelectedMac;
     private int mSelectedDeviceType;
 
     @Override
@@ -165,16 +164,12 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
             public void run() {
                 mokoBleScanner.stopScanDevice();
             }
-        }, 1000 * 10);
+        }, 1000 * 60);
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            back();
-            return false;
-        }
-        return super.onKeyDown(keyCode, event);
+    public void onBackPressed() {
+        back();
     }
 
     private void back() {
@@ -205,8 +200,6 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
                     }
                     XLog.i(password);
                     mPassword = password;
-                    mSelectedName = deviceInfo.name;
-                    mSelectedMac = deviceInfo.mac;
                     mSelectedDeviceType = deviceInfo.deviceType;
                     if (animation != null) {
                         mHandler.removeMessages(0);
@@ -249,7 +242,7 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
             dismissLoadingProgressDialog();
             showLoadingMessageDialog("Verifying..");
             mHandler.postDelayed(() -> {
-                // open password notify and set passwrord
+                // open password notify and set password
                 List<OrderTask> orderTasks = new ArrayList<>();
                 orderTasks.add(OrderTaskAssembler.setPassword(mPassword));
                 MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
@@ -294,11 +287,9 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
                                 XLog.i("Success");
 
                                 // 跳转配置页面
-                                Intent intent = new Intent(this, SetDeviceMQTTActivity.class);
-                                intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC, mSelectedMac);
-                                intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME, mSelectedName);
+                                Intent intent = new Intent(this, DeviceConfigActivity.class);
                                 intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, mSelectedDeviceType);
-                                startActivity(intent);
+                                startLauncher.launch(intent);
                             }
                             if (0 == result) {
                                 isPasswordError = true;
@@ -310,4 +301,11 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
             }
         }
     }
+
+    private final ActivityResultLauncher<Intent> startLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result.getResultCode() == RESULT_OK) {
+            ToastUtils.showToast(this, "Disconnected");
+        }
+    });
+
 }

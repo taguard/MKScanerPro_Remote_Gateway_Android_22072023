@@ -172,8 +172,8 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
         // 修改了设备名称
         if (!devices.isEmpty()) {
             for (MokoDevice device : devices) {
-                if (device.deviceId.equals(event.getDeviceId())) {
-                    device.nickName = DBTools.getInstance(this).selectDevice(device.deviceId).nickName;
+                if (device.mac.equals(event.getMac())) {
+                    device.name = DBTools.getInstance(this).selectDevice(device.mac).name;
                     break;
                 }
             }
@@ -197,25 +197,25 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
         setIntent(intent);
         if (getIntent().getExtras() != null) {
             String from = getIntent().getStringExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY);
-            String deviceId = getIntent().getStringExtra(AppConstants.EXTRA_KEY_DEVICE_ID);
+            String mac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_MAC);
             if (ModifyNameActivity.TAG.equals(from)
                     || DeviceSettingActivity.TAG.equals(from)) {
                 devices.clear();
                 devices.addAll(DBTools.getInstance(this).selectAllDevice());
-                if (!TextUtils.isEmpty(deviceId)) {
+                if (!TextUtils.isEmpty(mac)) {
                     for (final MokoDevice device : devices) {
-                        if (deviceId.equals(device.deviceId)) {
+                        if (mac.equals(device.mac)) {
                             device.isOnline = true;
                             if (mHandler.hasMessages(device.id)) {
                                 mHandler.removeMessages(device.id);
                             }
                             Message message = Message.obtain(mHandler, () -> {
                                 device.isOnline = false;
-                                XLog.i(device.deviceId + "离线");
+                                XLog.i(device.mac + "离线");
                                 adapter.replaceData(devices);
                             });
                             message.what = device.id;
-                            mHandler.sendMessageDelayed(message, 62 * 1000);
+                            mHandler.sendMessageDelayed(message, 60 * 1000);
                             break;
                         }
                     }
@@ -229,11 +229,11 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
                     mBind.rlEmpty.setVisibility(View.VISIBLE);
                 }
             }
-            if (ModifyMQTTSettingsActivity.TAG.equals(from)) {
-                if (!TextUtils.isEmpty(deviceId)) {
-                    MokoDevice mokoDevice = DBTools.getInstance(this).selectDevice(deviceId);
+            if (ModifySettingsActivity.TAG.equals(from)) {
+                if (!TextUtils.isEmpty(mac)) {
+                    MokoDevice mokoDevice = DBTools.getInstance(this).selectDevice(mac);
                     for (final MokoDevice device : devices) {
-                        if (deviceId.equals(device.deviceId)) {
+                        if (mac.equals(device.mac)) {
                             if (!device.topicPublish.equals(mokoDevice.topicPublish)) {
                                 // 取消订阅
                                 try {
@@ -319,7 +319,7 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
             } catch (MqttException e) {
                 e.printStackTrace();
             }
-            XLog.i(String.format("删除设备:%s", mokoDevice.nickName));
+            XLog.i(String.format("删除设备:%s", mokoDevice.name));
             DBTools.getInstance(RemoteMainActivity.this).deleteDevice(mokoDevice);
             EventBus.getDefault().post(new DeviceDeletedEvent(mokoDevice.id));
             devices.remove(mokoDevice);
@@ -374,26 +374,45 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
             e.printStackTrace();
             return;
         }
+        // 收到任何信息都认为在线，除了遗愿信息
         if (msg_id != MQTTConstants.NOTIFY_MSG_ID_NETWORKING_STATUS
-                && msg_id != MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT)
+                && msg_id != MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT
+                && msg_id != MQTTConstants.NOTIFY_MSG_ID_OFFLINE)
             return;
         if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT && isDurationVoid())
             return;
         Type type = new TypeToken<MsgNotify<Object>>() {
         }.getType();
         MsgNotify<Object> msgNotify = new Gson().fromJson(message, type);
-        final String deviceId = msgNotify.device_info.device_id;
+        final String mac = msgNotify.device_info.mac;
         for (final MokoDevice device : devices) {
-            if (device.deviceId.equals(deviceId)) {
+            if (device.mac.equals(mac)) {
+                if (msg_id == MQTTConstants.NOTIFY_MSG_ID_OFFLINE && device.isOnline) {
+                    // 收到遗愿信息，设备离线
+                    device.isOnline = false;
+                    if (mHandler.hasMessages(device.id)) {
+                        mHandler.removeMessages(device.id);
+                    }
+                    XLog.i(device.mac + "离线");
+                    adapter.replaceData(devices);
+                    EventBus.getDefault().post(new DeviceOnlineEvent(mac, false));
+                    break;
+                }
+                if (msg_id == MQTTConstants.NOTIFY_MSG_ID_NETWORKING_STATUS) {
+                    Type netType = new TypeToken<MsgNotify<JsonObject>>() {
+                    }.getType();
+                    MsgNotify<JsonObject> netMsgNotify = new Gson().fromJson(message, netType);
+                    device.netStatus = netMsgNotify.data.get("net_status").getAsInt();
+                }
                 device.isOnline = true;
                 if (mHandler.hasMessages(device.id)) {
                     mHandler.removeMessages(device.id);
                 }
                 Message offline = Message.obtain(mHandler, () -> {
                     device.isOnline = false;
-                    XLog.i(device.deviceId + "离线");
+                    XLog.i(device.mac + "离线");
                     adapter.replaceData(devices);
-                    EventBus.getDefault().post(new DeviceOnlineEvent(deviceId, false));
+                    EventBus.getDefault().post(new DeviceOnlineEvent(mac, false));
                 });
                 offline.what = device.id;
                 mHandler.sendMessageDelayed(offline, 62 * 1000);

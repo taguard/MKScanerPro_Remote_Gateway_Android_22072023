@@ -20,13 +20,10 @@ import com.moko.mkremotegw.utils.SPUtiles;
 import com.moko.mkremotegw.utils.ToastUtils;
 import com.moko.support.remotegw.MQTTConstants;
 import com.moko.support.remotegw.MQTTSupport;
-import com.moko.support.remotegw.entity.FilterTLM;
 import com.moko.support.remotegw.entity.MsgConfigResult;
-import com.moko.support.remotegw.entity.MsgDeviceInfo;
 import com.moko.support.remotegw.entity.MsgReadResult;
 import com.moko.support.remotegw.event.DeviceOnlineEvent;
 import com.moko.support.remotegw.event.MQTTMessageArrivedEvent;
-import com.moko.support.remotegw.handler.MQTTMessageAssembler;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -39,6 +36,7 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
 
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
+    private String mAppTopic;
 
     public Handler mHandler;
 
@@ -47,20 +45,20 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
 
     @Override
     protected void onCreate() {
-        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
-        appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
-        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
-        mHandler = new Handler(Looper.getMainLooper());
-
         mValues = new ArrayList<>();
-        mValues.add("Null");
         mValues.add("version 0");
         mValues.add("version 1");
-        showLoadingProgressDialog();
+        mValues.add("all");
+        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
+        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
+        mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
+        mHandler = new Handler(Looper.getMainLooper());
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             finish();
         }, 30 * 1000);
+        showLoadingProgressDialog();
         getFilterTlm();
     }
 
@@ -86,25 +84,23 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
             return;
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_FILTER_TLM) {
-            Type type = new TypeToken<MsgReadResult<FilterTLM>>() {
+            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
             }.getType();
-            MsgReadResult<FilterTLM> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbTlm.setChecked(result.data.onOff == 1);
-            mSelected = result.data.version;
+            mBind.cbTlm.setChecked(result.data.get("switch").getAsInt() == 1);
+            mSelected = result.data.get("tlm_version").getAsInt();
             mBind.tvTlmVersion.setText(mValues.get(mSelected));
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_FILTER_TLM) {
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
             MsgConfigResult result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
@@ -117,14 +113,7 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
-            return;
-        }
-        boolean online = event.isOnline();
-        if (!online) {
-            finish();
-        }
+        super.offline(event, mMokoDevice.mac);
     }
 
     public void back(View view) {
@@ -132,18 +121,10 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
     }
 
     private void getFilterTlm() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadFilterTLM(deviceInfo);
+        int msgId = MQTTConstants.READ_MSG_ID_FILTER_TLM;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_FILTER_TLM, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -154,8 +135,7 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             ToastUtils.showToast(this, "Set up failed");
@@ -166,23 +146,13 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
 
 
     private void saveParams() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-
-        FilterTLM filterTLM = new FilterTLM();
-        filterTLM.onOff = mBind.cbTlm.isChecked() ? 1 : 0;
-        filterTLM.version = mSelected;
-
-        String message = MQTTMessageAssembler.assembleWriteFilterTLM(deviceInfo, filterTLM);
+        int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_TLM;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("switch", mBind.cbTlm.isChecked() ? 1 : 0);
+        jsonObject.addProperty("tlm_version", mSelected);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_FILTER_TLM, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }

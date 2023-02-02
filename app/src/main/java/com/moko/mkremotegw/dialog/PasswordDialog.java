@@ -12,10 +12,10 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 
 import com.moko.mkremotegw.R;
-import com.moko.mkremotegw.databinding.DialogPasswordBinding;
+import com.moko.mkremotegw.databinding.DialogPasswordRemoteBinding;
 import com.moko.mkremotegw.utils.ToastUtils;
 
-public class PasswordDialog extends MokoBaseDialog<DialogPasswordBinding> {
+public class PasswordDialog extends MokoBaseDialog<DialogPasswordRemoteBinding> {
     public static final String TAG = PasswordDialog.class.getSimpleName();
 
     private final String FILTER_ASCII = "[ -~]*";
@@ -24,8 +24,8 @@ public class PasswordDialog extends MokoBaseDialog<DialogPasswordBinding> {
 
 
     @Override
-    protected DialogPasswordBinding getViewBind(LayoutInflater inflater, ViewGroup container) {
-        return DialogPasswordBinding.inflate(inflater, container, false);
+    protected DialogPasswordRemoteBinding getViewBind(LayoutInflater inflater, ViewGroup container) {
+        return DialogPasswordRemoteBinding.inflate(inflater, container, false);
     }
 
     @Override
@@ -40,7 +40,7 @@ public class PasswordDialog extends MokoBaseDialog<DialogPasswordBinding> {
                 return null;
             }
         };
-        mBind.etPassword.setFilters(new InputFilter[]{new InputFilter.LengthFilter(8), filter});
+        mBind.etPassword.setFilters(new InputFilter[]{new InputFilter.LengthFilter(10), filter});
         mBind.etPassword.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -54,7 +54,7 @@ public class PasswordDialog extends MokoBaseDialog<DialogPasswordBinding> {
             @Override
             public void afterTextChanged(Editable s) {
                 int length = s.toString().length();
-                mBind.tvPasswordEnsure.setEnabled(length > 0);
+                mBind.tvPasswordEnsure.setEnabled(length > 6);
             }
         });
         if (!TextUtils.isEmpty(password)) {

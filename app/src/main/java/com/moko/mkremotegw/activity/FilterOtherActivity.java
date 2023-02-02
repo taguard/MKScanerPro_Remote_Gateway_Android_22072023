@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -25,14 +26,10 @@ import com.moko.mkremotegw.utils.SPUtiles;
 import com.moko.mkremotegw.utils.ToastUtils;
 import com.moko.support.remotegw.MQTTConstants;
 import com.moko.support.remotegw.MQTTSupport;
-import com.moko.support.remotegw.entity.FilterCondition;
-import com.moko.support.remotegw.entity.FilterOther;
 import com.moko.support.remotegw.entity.MsgConfigResult;
-import com.moko.support.remotegw.entity.MsgDeviceInfo;
 import com.moko.support.remotegw.entity.MsgReadResult;
 import com.moko.support.remotegw.event.DeviceOnlineEvent;
 import com.moko.support.remotegw.event.MQTTMessageArrivedEvent;
-import com.moko.support.remotegw.handler.MQTTMessageAssembler;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -46,26 +43,27 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
 
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
+    private String mAppTopic;
 
     public Handler mHandler;
 
-    private List<FilterCondition.RawDataBean> filterOther;
+    private List<JsonObject> filterOther;
 
     private ArrayList<String> mValues;
     private int mSelected;
 
     @Override
     protected void onCreate() {
+        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
-        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
-
+        mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
         mHandler = new Handler(Looper.getMainLooper());
-        showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             finish();
         }, 30 * 1000);
+        showLoadingProgressDialog();
         getFilterOther();
     }
 
@@ -91,60 +89,61 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
             return;
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_FILTER_OTHER) {
-            Type type = new TypeToken<MsgReadResult<FilterOther>>() {
+            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
             }.getType();
-            MsgReadResult<FilterOther> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbOther.setChecked(result.data.onOff == 1);
-            if (result.data.array_num > 0) {
+            mBind.cbOther.setChecked(result.data.get("switch").getAsInt() == 1);
+            int relationship = result.data.get("relation").getAsInt();
+            if (relationship < 1) {
+                mValues = new ArrayList<>();
+                mValues.add("A");
+                mSelected = 0;
+            } else if (relationship < 3) {
+                mValues = new ArrayList<>();
+                mValues.add("A & B");
+                mValues.add("A | B");
+                mSelected = relationship - 1;
+            } else if (relationship < 6) {
+                mValues = new ArrayList<>();
+                mValues.add("A & B & C");
+                mValues.add("(A & B) | C");
+                mValues.add("A | B | C");
+                mSelected = relationship - 3;
+            }
+            JsonArray ruleList = result.data.getAsJsonArray("rule");
+            int number = ruleList.size();
+            filterOther = new ArrayList<>();
+            if (number > 0) {
                 mBind.clOtherRelationship.setVisibility(View.VISIBLE);
-                filterOther = result.data.rule;
-                if (filterOther.size() > 0) {
-                    for (int i = 0, l = filterOther.size(); i < l; i++) {
-                        FilterCondition.RawDataBean rawDataBean = filterOther.get(i);
-                        View v = LayoutInflater.from(FilterOtherActivity.this).inflate(R.layout.item_other_filter, mBind.llFilterCondition, false);
-                        TextView tvCondition = v.findViewById(R.id.tv_condition);
-                        EditText etDataType = v.findViewById(R.id.et_data_type);
-                        EditText etMin = v.findViewById(R.id.et_min);
-                        EditText etMax = v.findViewById(R.id.et_max);
-                        EditText etRawData = v.findViewById(R.id.et_raw_data);
-                        if (i == 0) {
-                            tvCondition.setText("Condition A");
-                        } else if (i == 1) {
-                            tvCondition.setText("Condition B");
-                        } else {
-                            tvCondition.setText("Condition C");
-                        }
-                        etDataType.setText(rawDataBean.type);
-                        etMin.setText(String.valueOf(rawDataBean.start));
-                        etMax.setText(String.valueOf(rawDataBean.end));
-                        etRawData.setText(rawDataBean.data);
-                        mBind.llFilterCondition.addView(v);
+                int index = 0;
+                for (JsonElement jsonElement : ruleList) {
+                    filterOther.add(jsonElement.getAsJsonObject());
+                    View v = LayoutInflater.from(FilterOtherActivity.this).inflate(R.layout.item_other_filter, mBind.llFilterCondition, false);
+                    TextView tvCondition = v.findViewById(R.id.tv_condition);
+                    EditText etDataType = v.findViewById(R.id.et_data_type);
+                    EditText etMin = v.findViewById(R.id.et_min);
+                    EditText etMax = v.findViewById(R.id.et_max);
+                    EditText etRawData = v.findViewById(R.id.et_raw_data);
+                    if (index == 0) {
+                        tvCondition.setText("Condition A");
+                    } else if (index == 1) {
+                        tvCondition.setText("Condition B");
+                    } else {
+                        tvCondition.setText("Condition C");
                     }
-                }
-                if (result.data.relationship < 1) {
-                    mValues = new ArrayList<>();
-                    mValues.add("A");
-                    mSelected = 0;
-                } else if (result.data.relationship < 3) {
-                    mValues = new ArrayList<>();
-                    mValues.add("A & B");
-                    mValues.add("A | B");
-                    mSelected = result.data.relationship - 1;
-                } else if (result.data.relationship < 6) {
-                    mValues = new ArrayList<>();
-                    mValues.add("A & B & C");
-                    mValues.add("(A & B) | C");
-                    mValues.add("A | B | C");
-                    mSelected = result.data.relationship - 3;
+                    etDataType.setText(jsonElement.getAsJsonObject().get("type").getAsString());
+                    etMin.setText(String.valueOf(jsonElement.getAsJsonObject().get("start").getAsInt()));
+                    etMax.setText(String.valueOf(jsonElement.getAsJsonObject().get("end").getAsInt()));
+                    etRawData.setText(jsonElement.getAsJsonObject().get("raw_data").getAsString());
+                    mBind.llFilterCondition.addView(v);
+                    index++;
                 }
                 mBind.tvOtherRelationship.setText(mValues.get(mSelected));
             } else {
-                filterOther = new ArrayList<>();
                 mBind.clOtherRelationship.setVisibility(View.GONE);
             }
 
@@ -153,9 +152,8 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
             MsgConfigResult result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
@@ -168,14 +166,7 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
-            return;
-        }
-        boolean online = event.isOnline();
-        if (!online) {
-            finish();
-        }
+        super.offline(event, mMokoDevice.mac);
     }
 
     public void back(View view) {
@@ -183,18 +174,10 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
     }
 
     private void getFilterOther() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadFilterOther(deviceInfo);
+        int msgId = MQTTConstants.READ_MSG_ID_FILTER_OTHER;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_FILTER_OTHER, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -292,33 +275,26 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
 
 
     private void saveParams() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
+        int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_OTHER;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("switch", mBind.cbOther.isChecked() ? 1 : 0);
+        if (filterOther.size() == 1) {
+            jsonObject.addProperty("relation", 0);
         }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-
-        FilterOther other = new FilterOther();
-        other.onOff = mBind.cbOther.isChecked() ? 1 : 0;
-        other.array_num = this.filterOther.size();
-        if (other.array_num == 1) {
-            other.relationship = 0;
+        if (filterOther.size() == 2) {
+            jsonObject.addProperty("relation", mSelected + 1);
         }
-        if (other.array_num == 2) {
-            other.relationship = mSelected + 1;
+        if (filterOther.size() == 3) {
+            jsonObject.addProperty("relation", mSelected + 3);
         }
-        if (other.array_num == 3) {
-            other.relationship = mSelected + 3;
+        JsonArray ruleList = new JsonArray();
+        for (JsonObject object : filterOther) {
+            ruleList.add(object);
         }
-        other.rule = filterOther;
-
-        String message = MQTTMessageAssembler.assembleWriteFilterOther(deviceInfo, other);
+        jsonObject.add("rule", ruleList);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_FILTER_OTHER, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -386,12 +362,12 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                         return false;
                     }
                 }
-                FilterCondition.RawDataBean rawDataBean = new FilterCondition.RawDataBean();
-                rawDataBean.type = String.format("%02x", dataType);
-                rawDataBean.start = min;
-                rawDataBean.end = max;
-                rawDataBean.data = rawDataStr;
-                filterOther.add(rawDataBean);
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.addProperty("type", String.format("%02x", dataType));
+                jsonObject.addProperty("start", min);
+                jsonObject.addProperty("end", max);
+                jsonObject.addProperty("data", rawDataStr);
+                filterOther.add(jsonObject);
             }
         } else {
             filterOther = new ArrayList<>();

@@ -42,15 +42,12 @@ public class ModifyNameActivity extends BaseActivity<ActivityModifyDeviceNameBin
 
             return null;
         };
-        mBind.etNickName.setText(device.nickName);
+        mBind.etNickName.setText(device.name);
         mBind.etNickName.setSelection(mBind.etNickName.getText().toString().length());
         mBind.etNickName.setFilters(new InputFilter[]{filter, new InputFilter.LengthFilter(20)});
-        mBind.etNickName.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                InputMethodManager inputManager = (InputMethodManager) mBind.etNickName.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputManager.showSoftInput(mBind.etNickName, 0);
-            }
+        mBind.etNickName.postDelayed(() -> {
+            InputMethodManager inputManager = (InputMethodManager) mBind.etNickName.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.showSoftInput(mBind.etNickName, 0);
         }, 300);
     }
 
@@ -61,17 +58,17 @@ public class ModifyNameActivity extends BaseActivity<ActivityModifyDeviceNameBin
 
 
     public void modifyDone(View view) {
-        String nickName = mBind.etNickName.getText().toString();
-        if (TextUtils.isEmpty(nickName)) {
+        String name = mBind.etNickName.getText().toString();
+        if (TextUtils.isEmpty(name)) {
             ToastUtils.showToast(this, R.string.modify_device_name_empty);
             return;
         }
-        device.nickName = nickName;
+        device.name = name;
         DBTools.getInstance(this).updateDevice(device);
         // 跳转首页，刷新数据
         Intent intent = new Intent(this, RemoteMainActivity.class);
         intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
-        intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, device.deviceId);
+        intent.putExtra(AppConstants.EXTRA_KEY_MAC, device.mac);
         startActivity(intent);
     }
 

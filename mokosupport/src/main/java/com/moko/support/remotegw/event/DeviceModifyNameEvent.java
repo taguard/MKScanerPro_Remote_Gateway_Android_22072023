@@ -2,13 +2,13 @@ package com.moko.support.remotegw.event;
 
 public class DeviceModifyNameEvent {
 
-    private String deviceId;
+    private String mac;
 
-    public DeviceModifyNameEvent(String deviceId) {
-        this.deviceId = deviceId;
+    public DeviceModifyNameEvent(String mac) {
+        this.mac = mac;
     }
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getMac() {
+        return mac;
     }
 }

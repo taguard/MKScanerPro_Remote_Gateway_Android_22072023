@@ -13,7 +13,7 @@ import android.widget.CompoundButton;
 
 import com.moko.mkremotegw.R;
 import com.moko.mkremotegw.base.BaseActivity;
-import com.moko.mkremotegw.databinding.FragmentSslDeviceBinding;
+import com.moko.mkremotegw.databinding.FragmentSslDeviceRemoteBinding;
 import com.moko.mkremotegw.dialog.BottomDialog;
 import com.moko.mkremotegw.utils.FileUtils;
 import com.moko.mkremotegw.utils.ToastUtils;
@@ -31,7 +31,7 @@ public class SSLDeviceFragment extends Fragment {
 
     private static final String TAG = SSLDeviceFragment.class.getSimpleName();
 
-    private FragmentSslDeviceBinding mBind;
+    private FragmentSslDeviceRemoteBinding mBind;
 
 
     private BaseActivity activity;
@@ -63,7 +63,7 @@ public class SSLDeviceFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        mBind = FragmentSslDeviceBinding.inflate(inflater, container, false);
+        mBind = FragmentSslDeviceRemoteBinding.inflate(inflater, container, false);
         activity = (BaseActivity) getActivity();
         mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
         mBind.cbSsl.setChecked(mConnectMode > 0);
@@ -131,9 +131,8 @@ public class SSLDeviceFragment extends Fragment {
 
     public void setConnectMode(int connectMode) {
         this.mConnectMode = connectMode;
-    }
-
-    public void setConnectMode() {
+        if (mBind == null)
+            return;
         mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
         mBind.cbSsl.setChecked(mConnectMode > 0);
         mBind.cbSsl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -177,14 +176,23 @@ public class SSLDeviceFragment extends Fragment {
 
     public void setCAPath(String caPath) {
         this.caPath = caPath;
+        if (mBind == null)
+            return;
+        mBind.tvCaFile.setText(caPath);
     }
 
     public void setClientKeyPath(String clientKeyPath) {
         this.clientKeyPath = clientKeyPath;
+        if (mBind == null)
+            return;
+        mBind.tvClientKeyFile.setText(clientKeyPath);
     }
 
     public void setClientCertPath(String clientCertPath) {
         this.clientCertPath = clientCertPath;
+        if (mBind == null)
+            return;
+        mBind.tvClientCertFile.setText(clientCertPath);
     }
 
     public void selectCertificate() {
@@ -280,7 +288,7 @@ public class SSLDeviceFragment extends Fragment {
     public boolean isValid() {
         final String caFile = mBind.tvCaFile.getText().toString();
         final String clientKeyFile = mBind.tvClientKeyFile.getText().toString();
-        final String clientCertFile =mBind.tvClientCertFile.getText().toString();
+        final String clientCertFile = mBind.tvClientCertFile.getText().toString();
         if (mConnectMode == 2) {
             if (TextUtils.isEmpty(caFile)) {
                 ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
@@ -303,7 +311,7 @@ public class SSLDeviceFragment extends Fragment {
         return true;
     }
 
-    public int getmConnectMode() {
+    public int getConnectMode() {
         return mConnectMode;
     }
 

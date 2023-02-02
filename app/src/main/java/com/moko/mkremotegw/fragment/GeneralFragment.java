@@ -76,14 +76,33 @@ public class GeneralFragment extends Fragment {
 
     public void setCleanSession(boolean cleanSession) {
         this.cleanSession = cleanSession;
+        if (mBind == null)
+            return;
+        mBind.cbCleanSession.setChecked(cleanSession);
     }
 
     public void setQos(int qos) {
         this.qos = qos;
+        if (mBind == null)
+            return;
+        if (qos == 0) {
+            mBind.rbQos1.setChecked(true);
+        } else if (qos == 1) {
+            mBind.rbQos2.setChecked(true);
+        } else if (qos == 2) {
+            mBind.rbQos3.setChecked(true);
+        }
     }
 
     public void setKeepAlive(int keepAlive) {
         this.keepAlive = keepAlive;
+        if (mBind == null)
+            return;
+        if (keepAlive < 0) {
+            mBind.etKeepAlive.setText("");
+            return;
+        }
+        mBind.etKeepAlive.setText(String.valueOf(keepAlive));
     }
 
     public boolean isValid() {

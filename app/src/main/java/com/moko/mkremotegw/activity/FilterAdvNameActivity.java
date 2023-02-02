@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -26,13 +27,10 @@ import com.moko.mkremotegw.utils.SPUtiles;
 import com.moko.mkremotegw.utils.ToastUtils;
 import com.moko.support.remotegw.MQTTConstants;
 import com.moko.support.remotegw.MQTTSupport;
-import com.moko.support.remotegw.entity.FilterType;
 import com.moko.support.remotegw.entity.MsgConfigResult;
-import com.moko.support.remotegw.entity.MsgDeviceInfo;
 import com.moko.support.remotegw.entity.MsgReadResult;
 import com.moko.support.remotegw.event.DeviceOnlineEvent;
 import com.moko.support.remotegw.event.MQTTMessageArrivedEvent;
-import com.moko.support.remotegw.handler.MQTTMessageAssembler;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -48,6 +46,7 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
 
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
+    private String mAppTopic;
 
     public Handler mHandler;
 
@@ -56,9 +55,6 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
 
     @Override
     protected void onCreate() {
-        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
-        appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
-        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         filter = new InputFilter() {
             @Override
             public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
@@ -69,12 +65,16 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
                 return null;
             }
         };
+        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
+        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
+        mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
         mHandler = new Handler(Looper.getMainLooper());
-        showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             finish();
         }, 30 * 1000);
+        showLoadingProgressDialog();
         getFilterAdvName();
     }
 
@@ -100,43 +100,40 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
             return;
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_FILTER_ADV_NAME) {
-            Type type = new TypeToken<MsgReadResult<FilterType>>() {
+            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
             }.getType();
-            MsgReadResult<FilterType> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbPreciseMatch.setChecked(result.data.precise == 1);
-            mBind.cbReverseFilter.setChecked(result.data.reverse == 1);
-            int number = result.data.array_num;
-            if (number == 0) {
-                filterAdvName = new ArrayList<>();
-            } else {
-                filterAdvName = result.data.rule;
-                if (filterAdvName.size() > 0) {
-                    for (int i = 0, l = filterAdvName.size(); i < l; i++) {
-                        String advName = filterAdvName.get(i);
-                        View v = LayoutInflater.from(FilterAdvNameActivity.this).inflate(R.layout.item_adv_name_filter, mBind.llDavName, false);
-                        TextView title = v.findViewById(R.id.tv_adv_name_title);
-                        EditText etAdvName = v.findViewById(R.id.et_adv_name);
-                        etAdvName.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20), filter});
-                        title.setText(String.format("ADV Name%d", i + 1));
-                        etAdvName.setText(advName);
-                        mBind.llDavName.addView(v);
-                    }
+            mBind.cbPreciseMatch.setChecked(result.data.get("precise").getAsInt() == 1);
+            mBind.cbReverseFilter.setChecked(result.data.get("reverse").getAsInt() == 1);
+            JsonArray macList = result.data.getAsJsonArray("name");
+            int number = macList.size();
+            filterAdvName = new ArrayList<>();
+            if (number != 0) {
+                int index = 1;
+                for (JsonElement jsonElement : macList) {
+                    filterAdvName.add(jsonElement.getAsString());
+                    String advName = jsonElement.getAsString();
+                    View v = LayoutInflater.from(FilterAdvNameActivity.this).inflate(R.layout.item_adv_name_filter, mBind.llDavName, false);
+                    TextView title = v.findViewById(R.id.tv_adv_name_title);
+                    EditText etAdvName = v.findViewById(R.id.et_adv_name);
+                    etAdvName.setFilters(new InputFilter[]{new InputFilter.LengthFilter(20), filter});
+                    title.setText(String.format("ADV Name%d", index));
+                    etAdvName.setText(advName);
+                    mBind.llDavName.addView(v);
+                    index++;
                 }
             }
-
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_FILTER_ADV_NAME) {
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
             MsgConfigResult result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
@@ -149,14 +146,7 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
-            return;
-        }
-        boolean online = event.isOnline();
-        if (!online) {
-            finish();
-        }
+        super.offline(event, mMokoDevice.mac);
     }
 
     public void back(View view) {
@@ -164,18 +154,10 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
     }
 
     private void getFilterAdvName() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadFilterAdvName(deviceInfo);
+        int msgId = MQTTConstants.READ_MSG_ID_FILTER_ADV_NAME;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_FILTER_ADV_NAME, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -186,8 +168,7 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (isValid()) {
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
@@ -236,25 +217,17 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
 
 
     private void saveParams() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-
-        FilterType filterType = new FilterType();
-        filterType.precise = mBind.cbPreciseMatch.isChecked() ? 1 : 0;
-        filterType.reverse = mBind.cbReverseFilter.isChecked() ? 1 : 0;
-        filterType.array_num = filterAdvName.size();
-        filterType.rule = filterAdvName;
-
-        String message = MQTTMessageAssembler.assembleWriteFilterAdvName(deviceInfo, filterType);
+        int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_ADV_NAME;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("precise", mBind.cbPreciseMatch.isChecked() ? 1 : 0);
+        jsonObject.addProperty("reverse", mBind.cbReverseFilter.isChecked() ? 1 : 0);
+        JsonArray macList = new JsonArray();
+        for (String mac : filterAdvName)
+            macList.add(mac);
+        jsonObject.add("name", macList);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_FILTER_ADV_NAME, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }

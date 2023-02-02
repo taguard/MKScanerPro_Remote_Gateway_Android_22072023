@@ -26,7 +26,13 @@ public class SSLDevicePathFragment extends Fragment {
 
     private BaseActivity activity;
 
-    private int connectMode = 0;
+    private int mConnectMode = 0;
+
+    private String host;
+    private int port;
+    private String caPath;
+    private String clientKeyPath;
+    private String clientCertPath;
 
     private ArrayList<String> values;
     private int selected;
@@ -51,20 +57,20 @@ public class SSLDevicePathFragment extends Fragment {
         Log.i(TAG, "onCreateView: ");
         mBind = FragmentSslDevicePathBinding.inflate(inflater, container, false);
         activity = (BaseActivity) getActivity();
-        mBind.clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
-        mBind.cbSsl.setChecked(connectMode > 0);
+        mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
+        mBind.cbSsl.setChecked(mConnectMode > 0);
         mBind.cbSsl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (!isChecked) {
-                    connectMode = 0;
+                    mConnectMode = 0;
                 } else {
                     if (selected == 0) {
-                        connectMode = 1;
+                        mConnectMode = 1;
                     } else if (selected == 1) {
-                        connectMode = 2;
+                        mConnectMode = 2;
                     } else if (selected == 2) {
-                        connectMode = 3;
+                        mConnectMode = 3;
                     }
                 }
                 mBind.clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
@@ -74,8 +80,11 @@ public class SSLDevicePathFragment extends Fragment {
         values.add("CA signed server certificate");
         values.add("CA certificate file");
         values.add("Self signed certificates");
-        if (connectMode > 0) {
-            selected = connectMode - 1;
+        if (mConnectMode > 0) {
+            selected = mConnectMode - 1;
+            mBind.etCaPath.setText(caPath);
+            mBind.etClientKeyPath.setText(clientKeyPath);
+            mBind.etClientCertPath.setText(clientCertPath);
             mBind.tvCertification.setText(values.get(selected));
         }
         if (selected == 0) {
@@ -115,6 +124,85 @@ public class SSLDevicePathFragment extends Fragment {
         super.onDestroy();
     }
 
+    public void setConnectMode(int connectMode) {
+        this.mConnectMode = connectMode;
+        if (mBind == null)
+            return;
+        mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
+        mBind.cbSsl.setChecked(mConnectMode > 0);
+        mBind.cbSsl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (!isChecked) {
+                    mConnectMode = 0;
+                } else {
+                    if (selected == 0) {
+                        mConnectMode = 1;
+                    } else if (selected == 1) {
+                        mConnectMode = 2;
+                    } else if (selected == 2) {
+                        mConnectMode = 3;
+                    }
+                }
+                mBind.clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            }
+        });
+        if (mConnectMode > 0) {
+            selected = mConnectMode - 1;
+            mBind.etCaPath.setText(caPath);
+            mBind.etClientKeyPath.setText(clientKeyPath);
+            mBind.etClientCertPath.setText(clientCertPath);
+            mBind.tvCertification.setText(values.get(selected));
+        }
+        if (selected == 0) {
+            mBind.llCa.setVisibility(View.GONE);
+            mBind.llClientKey.setVisibility(View.GONE);
+            mBind.llClientCert.setVisibility(View.GONE);
+        } else if (selected == 1) {
+            mBind.llCa.setVisibility(View.VISIBLE);
+            mBind.llClientKey.setVisibility(View.GONE);
+            mBind.llClientCert.setVisibility(View.GONE);
+        } else if (selected == 2) {
+            mBind.llCa.setVisibility(View.VISIBLE);
+            mBind.llClientKey.setVisibility(View.VISIBLE);
+            mBind.llClientCert.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void setCAPath(String caPath) {
+        this.caPath = caPath;
+        if (mBind == null)
+            return;
+        mBind.etCaPath.setText(caPath);
+    }
+
+    public void setClientKeyPath(String clientKeyPath) {
+        this.clientKeyPath = clientKeyPath;
+        if (mBind == null)
+            return;
+        mBind.etClientKeyPath.setText(clientKeyPath);
+    }
+
+    public void setClientCertPath(String clientCertPath) {
+        this.clientCertPath = clientCertPath;
+        if (mBind == null)
+            return;
+        mBind.etClientCertPath.setText(clientCertPath);
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+        if (mBind == null)
+            return;
+        mBind.etMqttHost.setText(clientCertPath);
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+        if (mBind == null)
+            return;
+        mBind.etMqttPort.setText(String.valueOf(port));
+    }
 
     public void selectCertificate() {
         BottomDialog dialog = new BottomDialog();
@@ -123,19 +211,19 @@ public class SSLDevicePathFragment extends Fragment {
             selected = value;
             mBind.tvCertification.setText(values.get(selected));
             if (selected == 0) {
-                connectMode = 1;
+                mConnectMode = 1;
                 mBind.llCa.setVisibility(View.GONE);
                 mBind.llClientKey.setVisibility(View.GONE);
                 mBind.llClientCert.setVisibility(View.GONE);
                 mBind.clCertServer.setVisibility(View.GONE);
             } else if (selected == 1) {
-                connectMode = 2;
+                mConnectMode = 2;
                 mBind.llCa.setVisibility(View.VISIBLE);
                 mBind.llClientKey.setVisibility(View.GONE);
                 mBind.llClientCert.setVisibility(View.GONE);
                 mBind.clCertServer.setVisibility(View.VISIBLE);
             } else if (selected == 2) {
-                connectMode = 3;
+                mConnectMode = 3;
                 mBind.llCa.setVisibility(View.VISIBLE);
                 mBind.llClientKey.setVisibility(View.VISIBLE);
                 mBind.llClientCert.setVisibility(View.VISIBLE);
@@ -152,7 +240,7 @@ public class SSLDevicePathFragment extends Fragment {
         final String caFile = mBind.etCaPath.getText().toString();
         final String clientKeyFile = mBind.etClientKeyPath.getText().toString();
         final String clientCertFile = mBind.etClientCertPath.getText().toString();
-        if (connectMode > 1) {
+        if (mConnectMode > 1) {
             if (TextUtils.isEmpty(host)) {
                 ToastUtils.showToast(activity, "Host error");
                 return false;
@@ -167,12 +255,12 @@ public class SSLDevicePathFragment extends Fragment {
                 return false;
             }
         }
-        if (connectMode == 2) {
+        if (mConnectMode == 2) {
             if (TextUtils.isEmpty(caFile)) {
                 ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
                 return false;
             }
-        } else if (connectMode == 3) {
+        } else if (mConnectMode == 3) {
             if (TextUtils.isEmpty(caFile)) {
                 ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
                 return false;
@@ -190,32 +278,27 @@ public class SSLDevicePathFragment extends Fragment {
     }
 
     public int getConnectMode() {
-        return connectMode;
+        return mConnectMode;
     }
 
     public String getSSLHost() {
-        final String host = mBind.etMqttHost.getText().toString();
-        return host;
+        return mBind.etMqttHost.getText().toString();
     }
 
     public int getSSLPort() {
         final String port = mBind.etMqttPort.getText().toString();
-        int portInt = Integer.parseInt(port);
-        return portInt;
+        return Integer.parseInt(port);
     }
 
     public String getCAPath() {
-        final String caFile = mBind.etCaPath.getText().toString();
-        return caFile;
+        return mBind.etCaPath.getText().toString();
     }
 
-    public String getClientCerPath() {
-        final String clientCertFile = mBind.etClientCertPath.getText().toString();
-        return clientCertFile;
+    public String getClientCertPath() {
+        return mBind.etClientCertPath.getText().toString();
     }
 
     public String getClientKeyPath() {
-        final String clientKeyFile = mBind.etClientKeyPath.getText().toString();
-        return clientKeyFile;
+        return mBind.etClientKeyPath.getText().toString();
     }
 }

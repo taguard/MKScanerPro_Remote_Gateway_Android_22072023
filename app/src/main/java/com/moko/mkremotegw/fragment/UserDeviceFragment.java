@@ -8,14 +8,14 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.moko.mkremotegw.base.BaseActivity;
-import com.moko.mkremotegw.databinding.FragmentUserDeviceBinding;
+import com.moko.mkremotegw.databinding.FragmentUserDeviceRemoteBinding;
 
 import androidx.fragment.app.Fragment;
 
 public class UserDeviceFragment extends Fragment {
     private final String FILTER_ASCII = "[ -~]*";
     private static final String TAG = UserDeviceFragment.class.getSimpleName();
-    private FragmentUserDeviceBinding mBind;
+    private FragmentUserDeviceRemoteBinding mBind;
 
 
     private BaseActivity activity;
@@ -40,7 +40,7 @@ public class UserDeviceFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        mBind = FragmentUserDeviceBinding.inflate(inflater, container, false);
+        mBind = FragmentUserDeviceRemoteBinding.inflate(inflater, container, false);
         activity = (BaseActivity) getActivity();
         InputFilter filter = (source, start, end, dest, dstart, dend) -> {
             if (!(source + "").matches(FILTER_ASCII)) {
@@ -76,17 +76,15 @@ public class UserDeviceFragment extends Fragment {
 
     public void setUserName(String username) {
         this.username = username;
-    }
-
-    public void setUserName() {
+        if (mBind == null)
+            return;
         mBind.etMqttUsername.setText(username);
     }
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public void setPassword() {
+        if (mBind == null)
+            return;
         mBind.etMqttPassword.setText(password);
     }
 

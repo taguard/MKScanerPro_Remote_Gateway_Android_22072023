@@ -19,13 +19,10 @@ import com.moko.mkremotegw.utils.SPUtiles;
 import com.moko.mkremotegw.utils.ToastUtils;
 import com.moko.support.remotegw.MQTTConstants;
 import com.moko.support.remotegw.MQTTSupport;
-import com.moko.support.remotegw.entity.FilterIBeacon;
 import com.moko.support.remotegw.entity.MsgConfigResult;
-import com.moko.support.remotegw.entity.MsgDeviceInfo;
 import com.moko.support.remotegw.entity.MsgReadResult;
 import com.moko.support.remotegw.event.DeviceOnlineEvent;
 import com.moko.support.remotegw.event.MQTTMessageArrivedEvent;
-import com.moko.support.remotegw.handler.MQTTMessageAssembler;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -37,20 +34,22 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
 
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
+    private String mAppTopic;
 
     public Handler mHandler;
 
     @Override
     protected void onCreate() {
+        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
-        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
+        mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
         mHandler = new Handler(Looper.getMainLooper());
-        showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             finish();
         }, 30 * 1000);
+        showLoadingProgressDialog();
         getFilterIBeacon();
     }
 
@@ -76,28 +75,26 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
             return;
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_FILTER_IBEACON) {
-            Type type = new TypeToken<MsgReadResult<FilterIBeacon>>() {
+            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
             }.getType();
-            MsgReadResult<FilterIBeacon> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbIbeacon.setChecked(result.data.onOff == 1);
-            mBind.etIbeaconUuid.setText(result.data.uuid);
-            mBind.etIbeaconMajorMin.setText(String.valueOf(result.data.min_major));
-            mBind.etIbeaconMajorMax.setText(String.valueOf(result.data.max_major));
-            mBind.etIbeaconMinorMin.setText(String.valueOf(result.data.min_minor));
-            mBind.etIbeaconMinorMax.setText(String.valueOf(result.data.max_minor));
+            mBind.cbIbeacon.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.etIbeaconUuid.setText(result.data.get("uuid").getAsString());
+            mBind.etIbeaconMajorMin.setText(String.valueOf(result.data.get("min_major").getAsInt()));
+            mBind.etIbeaconMajorMax.setText(String.valueOf(result.data.get("max_major").getAsInt()));
+            mBind.etIbeaconMinorMin.setText(String.valueOf(result.data.get("min_minor").getAsInt()));
+            mBind.etIbeaconMinorMax.setText(String.valueOf(result.data.get("max_minor").getAsInt()));
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_FILTER_IBEACON) {
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
             MsgConfigResult result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
@@ -110,14 +107,7 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
-            return;
-        }
-        boolean online = event.isOnline();
-        if (!online) {
-            finish();
-        }
+        super.offline(event, mMokoDevice.mac);
     }
 
     public void back(View view) {
@@ -125,18 +115,10 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
     }
 
     private void getFilterIBeacon() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadFilterIBeacon(deviceInfo);
+        int msgId = MQTTConstants.READ_MSG_ID_FILTER_IBEACON;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_FILTER_IBEACON, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -147,8 +129,7 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (isValid()) {
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
@@ -161,27 +142,17 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
 
 
     private void saveParams() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-
-        FilterIBeacon filterIBeacon = new FilterIBeacon();
-        filterIBeacon.onOff = mBind.cbIbeacon.isChecked() ? 1 : 0;
-        filterIBeacon.min_major = Integer.parseInt(mBind.etIbeaconMajorMin.getText().toString());
-        filterIBeacon.max_major = Integer.parseInt(mBind.etIbeaconMajorMax.getText().toString());
-        filterIBeacon.min_minor = Integer.parseInt(mBind.etIbeaconMinorMin.getText().toString());
-        filterIBeacon.max_minor = Integer.parseInt(mBind.etIbeaconMinorMax.getText().toString());
-        filterIBeacon.uuid = mBind.etIbeaconUuid.getText().toString();
-
-        String message = MQTTMessageAssembler.assembleWriteFilterIBeacon(deviceInfo, filterIBeacon);
+        int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_IBEACON;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("switch", mBind.cbIbeacon.isChecked() ? 1 : 0);
+        jsonObject.addProperty("min_major", Integer.parseInt(mBind.etIbeaconMajorMin.getText().toString()));
+        jsonObject.addProperty("max_major", Integer.parseInt(mBind.etIbeaconMajorMax.getText().toString()));
+        jsonObject.addProperty("min_minor", Integer.parseInt(mBind.etIbeaconMinorMin.getText().toString()));
+        jsonObject.addProperty("max_minor", Integer.parseInt(mBind.etIbeaconMinorMax.getText().toString()));
+        jsonObject.addProperty("uuid", mBind.etIbeaconUuid.getText().toString());
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_FILTER_IBEACON, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }

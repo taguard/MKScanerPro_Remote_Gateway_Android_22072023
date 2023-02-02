@@ -1,5 +1,6 @@
 package com.moko.support.remotegw;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -55,7 +56,7 @@ final class MokoBleConfig extends MokoBleManager {
         mMokoResponseCallback.onCharacteristicRead(characteristic, value);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @SuppressLint("MissingPermission")
     @Override
     public void discovered(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         UUID lastCharacteristicUUID = characteristic.getUuid();

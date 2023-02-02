@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,7 +15,7 @@ import com.moko.mkremotegw.AppConstants;
 import com.moko.mkremotegw.R;
 import com.moko.mkremotegw.adapter.ScanDeviceAdapter;
 import com.moko.mkremotegw.base.BaseActivity;
-import com.moko.mkremotegw.databinding.ActivityDetailBinding;
+import com.moko.mkremotegw.databinding.ActivityDetailRemoteBinding;
 import com.moko.mkremotegw.db.DBTools;
 import com.moko.mkremotegw.entity.MQTTConfig;
 import com.moko.mkremotegw.entity.MokoDevice;
@@ -22,15 +23,15 @@ import com.moko.mkremotegw.utils.SPUtiles;
 import com.moko.mkremotegw.utils.ToastUtils;
 import com.moko.support.remotegw.MQTTConstants;
 import com.moko.support.remotegw.MQTTSupport;
+import com.moko.support.remotegw.entity.BXPButtonInfo;
+import com.moko.support.remotegw.entity.BleConnectedList;
 import com.moko.support.remotegw.entity.MsgConfigResult;
-import com.moko.support.remotegw.entity.MsgDeviceInfo;
 import com.moko.support.remotegw.entity.MsgNotify;
 import com.moko.support.remotegw.entity.MsgReadResult;
-import com.moko.support.remotegw.entity.ScanConfig;
+import com.moko.support.remotegw.entity.OtherDeviceInfo;
 import com.moko.support.remotegw.event.DeviceModifyNameEvent;
 import com.moko.support.remotegw.event.DeviceOnlineEvent;
 import com.moko.support.remotegw.event.MQTTMessageArrivedEvent;
-import com.moko.support.remotegw.handler.MQTTMessageAssembler;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -42,29 +43,35 @@ import java.util.List;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
+public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBinding> {
+    public static final String TAG = DeviceDetailActivity.class.getSimpleName();
+
+    private MokoDevice mMokoDevice;
+    private MQTTConfig appMqttConfig;
+    private String mAppTopic;
 
     private boolean mScanSwitch;
-    private int mScanInterval;
-    private MokoDevice mMokoDevice;
     private ScanDeviceAdapter mAdapter;
     private ArrayList<String> mScanDevices;
-    private MQTTConfig appMqttConfig;
     private Handler mHandler;
+    private BXPButtonInfo mConnectedBXPButtonInfo;
 
     @Override
     protected void onCreate() {
+        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
-        mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
-        mBind.tvDeviceName.setText(mMokoDevice.nickName);
+        mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
+        mHandler = new Handler(Looper.getMainLooper());
+
+        mBind.tvDeviceName.setText(mMokoDevice.name);
         mScanDevices = new ArrayList<>();
         mAdapter = new ScanDeviceAdapter();
         mAdapter.openLoadAnimation();
         mAdapter.replaceData(mScanDevices);
         mBind.rvDevices.setLayoutManager(new LinearLayoutManager(this));
         mBind.rvDevices.setAdapter(mAdapter);
-        mHandler = new Handler(Looper.getMainLooper());
+
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             finish();
@@ -74,16 +81,21 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
     }
 
     @Override
-    protected ActivityDetailBinding getViewBinding() {
-        return ActivityDetailBinding.inflate(getLayoutInflater());
+    protected ActivityDetailRemoteBinding getViewBinding() {
+        return ActivityDetailRemoteBinding.inflate(getLayoutInflater());
     }
 
     private void changeView() {
         mBind.ivScanSwitch.setImageResource(mScanSwitch ? R.drawable.checkbox_open : R.drawable.checkbox_close);
-        mBind.tvScanDeviceTotal.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
-        mBind.tvScanDeviceTotal.setText(getString(R.string.scan_device_total, mScanDevices.size()));
-        mBind.llScanInterval.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
+        mBind.tvManageDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
         mBind.rvDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        XLog.i(TAG + "-->onNewIntent...");
+        setIntent(intent);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -103,39 +115,33 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
             return;
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_SCAN_CONFIG) {
-            Type type = new TypeToken<MsgReadResult<ScanConfig>>() {
+            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
             }.getType();
-            MsgReadResult<ScanConfig> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mScanSwitch = result.data.scan_switch == 1;
-            mScanInterval = result.data.scan_time;
-            mBind.etScanInterval.setText(String.valueOf(mScanInterval));
+            mScanSwitch = result.data.get("scan_switch").getAsInt() == 1;
             changeView();
         }
         if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT) {
             Type type = new TypeToken<MsgNotify<List<JsonObject>>>() {
             }.getType();
             MsgNotify<List<JsonObject>> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             for (JsonObject jsonObject : result.data) {
                 mScanDevices.add(0, jsonObject.toString());
             }
-            mBind.tvScanDeviceTotal.setText(getString(R.string.scan_device_total, mScanDevices.size()));
             mAdapter.replaceData(mScanDevices);
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_SCAN_CONFIG) {
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
             MsgConfigResult result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            }
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
@@ -144,22 +150,107 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
                 ToastUtils.showToast(this, "Set up failed");
             }
         }
+        if (msg_id == MQTTConstants.READ_MSG_ID_BLE_CONNECTED_LIST) {
+            Type type = new TypeToken<MsgReadResult<BleConnectedList>>() {
+            }.getType();
+            MsgReadResult<BleConnectedList> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            if (result.data.ble_conn_list != null && !result.data.ble_conn_list.isEmpty()) {
+                // 当前连接的设备有值
+                BleConnectedList.BleDevice bleDevice = result.data.ble_conn_list.get(0);
+                // 根据类型请求不同数据
+                if (bleDevice.type == 0) {
+                    readOtherInfo(bleDevice.mac);
+                } else {
+                    mConnectedBXPButtonInfo = new BXPButtonInfo();
+                    readBXPButtonInfo(bleDevice.mac);
+                }
+            } else {
+                Intent intent = new Intent(this, BleManagerActivity.class);
+                intent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
+                startActivity(intent);
+            }
+        }
+        if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_BXP_BUTTON_INFO) {
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            Type type = new TypeToken<MsgNotify<BXPButtonInfo>>() {
+            }.getType();
+            MsgNotify<BXPButtonInfo> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            BXPButtonInfo bxpButtonInfo = result.data;
+            if (bxpButtonInfo.result_code != 0) {
+                ToastUtils.showToast(this, "Setup failed");
+                return;
+            }
+            mConnectedBXPButtonInfo.mac = bxpButtonInfo.mac;
+            mConnectedBXPButtonInfo.product_model = bxpButtonInfo.product_model;
+            mConnectedBXPButtonInfo.company_name = bxpButtonInfo.company_name;
+            mConnectedBXPButtonInfo.hardware_version = bxpButtonInfo.hardware_version;
+            mConnectedBXPButtonInfo.software_version = bxpButtonInfo.software_version;
+            mConnectedBXPButtonInfo.firmware_version = bxpButtonInfo.firmware_version;
+            readBXPButtonStatus(bxpButtonInfo.mac);
+        }
+        if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_BXP_BUTTON_STATUS) {
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            Type type = new TypeToken<MsgNotify<BXPButtonInfo>>() {
+            }.getType();
+            MsgNotify<BXPButtonInfo> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            BXPButtonInfo bxpButtonInfo = result.data;
+            if (bxpButtonInfo.result_code != 0) {
+                ToastUtils.showToast(this, "Setup failed");
+                return;
+            }
+            mConnectedBXPButtonInfo.battery_v = bxpButtonInfo.battery_v;
+            mConnectedBXPButtonInfo.alarm_num = bxpButtonInfo.alarm_num;
+            mConnectedBXPButtonInfo.alarm_status = bxpButtonInfo.alarm_status;
+            ToastUtils.showToast(this, "Setup succeed");
+            Intent intent = new Intent(this, BXPButtonInfoActivity.class);
+            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
+            intent.putExtra(AppConstants.EXTRA_KEY_BXP_BUTTON_INFO, mConnectedBXPButtonInfo);
+            startActivity(intent);
+        }
+        if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_OTHER_INFO) {
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            Type type = new TypeToken<MsgNotify<OtherDeviceInfo>>() {
+            }.getType();
+            MsgNotify<OtherDeviceInfo> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            OtherDeviceInfo otherDeviceInfo = result.data;
+            if (otherDeviceInfo.result_code != 0) {
+                ToastUtils.showToast(this, "Setup failed");
+                return;
+            }
+            ToastUtils.showToast(this, "Setup succeed");
+            Intent intent = new Intent(this, BleOtherInfoActivity.class);
+            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
+            intent.putExtra(AppConstants.EXTRA_KEY_OTHER_DEVICE_INFO, otherDeviceInfo);
+            startActivity(intent);
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceModifyNameEvent(DeviceModifyNameEvent event) {
         // 修改了设备名称
-        MokoDevice device = DBTools.getInstance(DeviceDetailActivity.this).selectDevice(mMokoDevice.deviceId);
-        mMokoDevice.nickName = device.nickName;
-        mBind.tvDeviceName.setText(mMokoDevice.nickName);
+        MokoDevice device = DBTools.getInstance(DeviceDetailActivity.this).selectDevice(mMokoDevice.mac);
+        mMokoDevice.name = device.name;
+        mBind.tvDeviceName.setText(mMokoDevice.name);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
+        String mac = event.getMac();
+        if (!mMokoDevice.mac.equals(mac))
             return;
-        }
         boolean online = event.isOnline();
         if (!online) {
             ToastUtils.showToast(this, "device is off-line");
@@ -191,14 +282,6 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
             ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
-        if ((mMokoDevice.deviceType & 0x0F) > 1) {
-            // MK107 Pro
-            Intent i = new Intent(this, ScannerUploadOptionProActivity.class);
-            i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
-            startActivity(i);
-            return;
-        }
-        // MK107
         Intent i = new Intent(this, ScannerUploadOptionActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -218,12 +301,8 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
         }
         mScanSwitch = !mScanSwitch;
         mBind.ivScanSwitch.setImageResource(mScanSwitch ? R.drawable.checkbox_open : R.drawable.checkbox_close);
-        mBind.tvScanDeviceTotal.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
-        mBind.tvScanDeviceTotal.setText(getString(R.string.scan_device_total, 0));
-        mBind.llScanInterval.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
+        mBind.tvManageDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
         mBind.rvDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
-        mBind.etScanInterval.setEnabled(mScanSwitch);
-        mBind.etScanInterval.setText(String.valueOf(mScanInterval));
         mScanDevices.clear();
         mAdapter.replaceData(mScanDevices);
         mHandler.postDelayed(() -> {
@@ -234,7 +313,7 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
         setScanConfig();
     }
 
-    public void onSaveScanTime(View view) {
+    public void onManageBleDevices(View view) {
         if (isWindowLocked())
             return;
         // 设置扫描间隔
@@ -246,59 +325,105 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailBinding> {
             ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
-        String interval = mBind.etScanInterval.getText().toString();
-        if (TextUtils.isEmpty(interval)) {
-            ToastUtils.showToast(this, "Failed");
-            return;
-        }
-        mScanInterval = Integer.parseInt(interval);
-        if (mScanInterval < 10 || mScanInterval > 65535) {
-            ToastUtils.showToast(this, "Failed");
-            return;
-        }
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             ToastUtils.showToast(this, "Set up failed");
         }, 30 * 1000);
         showLoadingProgressDialog();
-        setScanConfig();
+        getBleConnectedList();
     }
 
+    private void getBleConnectedList() {
+        int msgId = MQTTConstants.READ_MSG_ID_BLE_CONNECTED_LIST;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void getScanConfig() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadScanConfig(deviceInfo);
+        int msgId = MQTTConstants.READ_MSG_ID_SCAN_CONFIG;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_SCAN_CONFIG, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
     private void setScanConfig() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        ScanConfig scanConfig = new ScanConfig();
-        scanConfig.scan_switch = mScanSwitch ? 1 : 0;
-        scanConfig.scan_time = mScanInterval;
-        String message = MQTTMessageAssembler.assembleWriteScanConfig(deviceInfo, scanConfig);
+        int msgId = MQTTConstants.CONFIG_MSG_ID_SCAN_CONFIG;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("scan_switch", mScanSwitch ? 1 : 0);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_SCAN_CONFIG, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void readOtherInfo(String mac) {
+        mHandler.postDelayed(() -> {
+            dismissLoadingProgressDialog();
+            ToastUtils.showToast(this, "Setup failed");
+        }, 30 * 1000);
+        showLoadingProgressDialog();
+        getOtherInfo(mac);
+    }
+
+    private void getOtherInfo(String mac) {
+        int msgId = MQTTConstants.CONFIG_MSG_ID_BLE_OTHER_INFO;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("mac", mac);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void readBXPButtonInfo(String mac) {
+        mHandler.postDelayed(() -> {
+            dismissLoadingProgressDialog();
+            ToastUtils.showToast(this, "Setup failed");
+        }, 30 * 1000);
+        showLoadingProgressDialog();
+        getBXPButtonInfo(mac);
+    }
+
+    private void getBXPButtonInfo(String mac) {
+        int msgId = MQTTConstants.CONFIG_MSG_ID_BLE_BXP_BUTTON_INFO;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("mac", mac);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void readBXPButtonStatus(String mac) {
+        mHandler.postDelayed(() -> {
+            dismissLoadingProgressDialog();
+            ToastUtils.showToast(this, "Setup failed");
+        }, 30 * 1000);
+        showLoadingProgressDialog();
+        getBXPButtonStatus(mac);
+    }
+
+    private void getBXPButtonStatus(String mac) {
+        int msgId = MQTTConstants.CONFIG_MSG_ID_BLE_BXP_BUTTON_STATUS;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("mac", mac);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }

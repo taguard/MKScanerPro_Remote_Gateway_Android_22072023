@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.moko.mkremotegw.base.BaseActivity;
-import com.moko.mkremotegw.databinding.FragmentGeneralDeviceBinding;
+import com.moko.mkremotegw.databinding.FragmentGeneralDeviceRemoteBinding;
 import com.moko.mkremotegw.utils.ToastUtils;
 
 import androidx.fragment.app.Fragment;
@@ -16,7 +16,7 @@ import androidx.fragment.app.Fragment;
 public class GeneralDeviceFragment extends Fragment {
 
     private static final String TAG = GeneralDeviceFragment.class.getSimpleName();
-    private FragmentGeneralDeviceBinding mBind;
+    private FragmentGeneralDeviceRemoteBinding mBind;
     private BaseActivity activity;
 
     private boolean cleanSession;
@@ -41,7 +41,7 @@ public class GeneralDeviceFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        mBind = FragmentGeneralDeviceBinding.inflate(inflater, container, false);
+        mBind = FragmentGeneralDeviceRemoteBinding.inflate(inflater, container, false);
         activity = (BaseActivity) getActivity();
         mBind.cbCleanSession.setChecked(cleanSession);
         if (qos == 0) {
@@ -75,21 +75,15 @@ public class GeneralDeviceFragment extends Fragment {
 
     public void setCleanSession(boolean cleanSession) {
         this.cleanSession = cleanSession;
+        if (mBind == null)
+            return;
+        mBind.cbCleanSession.setChecked(cleanSession);
     }
 
     public void setQos(int qos) {
         this.qos = qos;
-    }
-
-    public void setKeepAlive(int keepAlive) {
-        this.keepAlive = keepAlive;
-    }
-
-    public void setCleanSession() {
-        mBind.cbCleanSession.setChecked(cleanSession);
-    }
-
-    public void setQos() {
+        if (mBind == null)
+            return;
         if (qos == 0) {
             mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
@@ -99,7 +93,14 @@ public class GeneralDeviceFragment extends Fragment {
         }
     }
 
-    public void setKeepAlive() {
+    public void setKeepAlive(int keepAlive) {
+        this.keepAlive = keepAlive;
+        if (mBind == null)
+            return;
+        if (keepAlive < 0) {
+            mBind.etKeepAlive.setText("");
+            return;
+        }
         mBind.etKeepAlive.setText(String.valueOf(keepAlive));
     }
 
