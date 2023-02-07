@@ -197,7 +197,7 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

@@ -135,10 +135,6 @@ public class CommunicationTimeoutActivity extends BaseActivity<ActivityCommunica
     public void onSave(View view) {
         if (isWindowLocked()) return;
         String timeoutStr = mBind.etCommunicationTimeout.getText().toString();
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
         if (TextUtils.isEmpty(timeoutStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;
@@ -146,6 +142,10 @@ public class CommunicationTimeoutActivity extends BaseActivity<ActivityCommunica
         int timeout = Integer.parseInt(timeoutStr);
         if (timeout > 60) {
             ToastUtils.showToast(this, "Para Error");
+            return;
+        }
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
             return;
         }
         mHandler.postDelayed(() -> {

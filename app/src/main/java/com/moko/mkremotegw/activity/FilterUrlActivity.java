@@ -116,10 +116,6 @@ public class FilterUrlActivity extends BaseActivity<ActivityFilterUrlBinding> {
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
-        finish();
-    }
-
     private void getFilterUrl() {
         int msgId = MQTTConstants.READ_MSG_ID_FILTER_URL;
         String message = assembleReadCommon(msgId, mMokoDevice.mac);

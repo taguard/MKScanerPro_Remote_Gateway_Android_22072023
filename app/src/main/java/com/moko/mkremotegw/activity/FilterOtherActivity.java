@@ -187,10 +187,6 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
         }
     }
 
-    public void onBack(View view) {
-        finish();
-    }
-
     public void onSave(View view) {
         if (isWindowLocked())
             return;

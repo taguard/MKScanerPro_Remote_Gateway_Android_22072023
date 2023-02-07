@@ -116,10 +116,6 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
-        finish();
-    }
-
     private void getFilterTlm() {
         int msgId = MQTTConstants.READ_MSG_ID_FILTER_TLM;
         String message = assembleReadCommon(msgId, mMokoDevice.mac);

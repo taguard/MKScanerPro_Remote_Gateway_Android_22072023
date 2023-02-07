@@ -107,10 +107,6 @@ public class FilterUIDActivity extends BaseActivity<ActivityFilterUidBinding> {
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
-        finish();
-    }
-
     private void getFilterUid() {
         int msgId = MQTTConstants.READ_MSG_ID_FILTER_UID;
         String message = assembleReadCommon(msgId, mMokoDevice.mac);

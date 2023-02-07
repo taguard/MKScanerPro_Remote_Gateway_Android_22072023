@@ -122,18 +122,7 @@ public class DeviceInformationActivity extends BaseActivity<ActivityDeviceInform
         }
     }
 
-    @Override
-    public void onBackPressed() {
-        if (isWindowLocked()) return;
-        back();
-    }
-
-    private void back() {
-        finish();
-    }
-
     public void onBack(View view) {
-        if (isWindowLocked()) return;
-        back();
+        finish();
     }
 }

@@ -258,13 +258,17 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
         }
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
     public void onDeviceSetting(View view) {
         if (isWindowLocked())
             return;
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
+            return;
+        }
         Intent intent = new Intent(this, DeviceSettingActivity.class);
         intent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(intent);

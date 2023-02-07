@@ -101,8 +101,7 @@ public class ModifySettingsActivity extends BaseActivity<ActivityModifySettingsB
     }
 
     public void onBack(View view) {
-        if (isWindowLocked())
-            finish();
+        finish();
     }
 
 

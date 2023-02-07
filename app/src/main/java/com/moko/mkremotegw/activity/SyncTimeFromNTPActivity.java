@@ -116,10 +116,6 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncFromNtpBin
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
-        finish();
-    }
-
     private void getNtpServer() {
         int msgId = MQTTConstants.READ_MSG_ID_NTP_SERVER;
         String message = assembleReadCommon(msgId, mMokoDevice.mac);

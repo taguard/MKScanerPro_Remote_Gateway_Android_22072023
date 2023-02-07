@@ -146,10 +146,6 @@ public class FilterPIRActivity extends BaseActivity<ActivityFilterPirBinding> {
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
-        finish();
-    }
-
     private void getFilterPIR() {
         int msgId = MQTTConstants.READ_MSG_ID_FILTER_PIR;
         String message = assembleReadCommon(msgId, mMokoDevice.mac);

@@ -153,7 +153,7 @@ public class ModifyNetworkSettingsActivity extends BaseActivity<ActivityNetworkS
 
     public void onSave(View view) {
         if (isWindowLocked()) return;
-        if (isVerify()) {
+        if (!isParaError()) {
             if (!MQTTSupport.getInstance().isConnected()) {
                 ToastUtils.showToast(this, R.string.network_error);
                 return;
@@ -169,7 +169,7 @@ public class ModifyNetworkSettingsActivity extends BaseActivity<ActivityNetworkS
         }
     }
 
-    private boolean isVerify() {
+    private boolean isParaError() {
         if (!mBind.cbDhcp.isChecked()) {
             String ip = mBind.etIp.getText().toString();
             String mask = mBind.etMask.getText().toString();
@@ -183,8 +183,8 @@ public class ModifyNetworkSettingsActivity extends BaseActivity<ActivityNetworkS
                     || !matcherMask.matches()
                     || !matcherGateway.matches()
                     || !matcherDns.matches())
-                return false;
+                return true;
         }
-        return true;
+        return false;
     }
 }

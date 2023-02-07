@@ -150,6 +150,26 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
         }
+        if (msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
+            Type type = new TypeToken<MsgNotify<JsonObject>>() {
+            }.getType();
+            MsgNotify<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            int status = result.data.get("status").getAsInt();
+            if (status == 1) {
+                ToastUtils.showToast(this, "Device is OTA, please wait");
+                return;
+            }
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                ToastUtils.showToast(this, "Set up failed");
+            }, 30 * 1000);
+            showLoadingProgressDialog();
+            setWifiSettings();
+        }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_WIFI_SETTINGS) {
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
@@ -322,31 +342,31 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
 
     public void onSave(View view) {
         if (isWindowLocked()) return;
-        if (isVerify()) {
+        if (!isParaError()) {
             saveParams();
         } else {
             ToastUtils.showToast(this, "Para Error");
         }
     }
 
-    private boolean isVerify() {
+    private boolean isParaError() {
         String ssid = mBind.etSsid.getText().toString();
-        if (!TextUtils.isEmpty(ssid))
-            return false;
+        if (TextUtils.isEmpty(ssid))
+            return true;
         if (mSecuritySelected != 0) {
             if (mEAPTypeSelected != 2 && !mBind.cbVerifyServer.isChecked()) {
-                return true;
+                return false;
             }
             String host = mBind.etHost.getText().toString();
             String portStr = mBind.etPort.getText().toString();
             String caFilePath = mBind.etCaFilePath.getText().toString();
             if (TextUtils.isEmpty(host) || TextUtils.isEmpty(portStr) || TextUtils.isEmpty(caFilePath))
-                return false;
+                return true;
             int port = Integer.parseInt(portStr);
             if (port < 1 || port > 65535)
-                return false;
+                return true;
         }
-        return true;
+        return false;
     }
 
     private void saveParams() {
@@ -354,16 +374,22 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline && mBind.cbVerifyServer.isChecked()) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
+        XLog.i("查询设备当前状态");
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             ToastUtils.showToast(this, "Set up failed");
-        }, 30 * 1000);
+        }, 50 * 1000);
         showLoadingProgressDialog();
-        setWifiSettings();
+        getDeviceStatus();
     }
 
+    private void getDeviceStatus() {
+        int msgId = MQTTConstants.READ_MSG_ID_DEVICE_STATUS;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
 }

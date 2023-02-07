@@ -130,10 +130,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
-        finish();
-    }
-
     private void getFilterRawDataSwitch() {
         int msgId = MQTTConstants.READ_MSG_ID_FILTER_RAW_DATA_SWITCH;
         String message = assembleReadCommon(msgId, mMokoDevice.mac);

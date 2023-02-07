@@ -336,24 +336,24 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
 
     public void onSave(View view) {
         if (isWindowLocked()) return;
-        if (isVerify()) {
+        if (!isParaError()) {
             saveParams();
         } else {
             ToastUtils.showToast(this, "Para Error");
         }
     }
 
-    private boolean isVerify() {
+    private boolean isParaError() {
         String ssid = mBind.etSsid.getText().toString();
         if (TextUtils.isEmpty(ssid))
-            return false;
+            return true;
         if (mSecuritySelected != 0) {
             if (mEAPTypeSelected != 2 && !mBind.cbVerifyServer.isChecked()) {
-                return true;
+                return false;
             }
-            return !TextUtils.isEmpty(mCaPath);
+            return TextUtils.isEmpty(mCaPath);
         }
-        return true;
+        return false;
     }
 
     private void saveParams() {

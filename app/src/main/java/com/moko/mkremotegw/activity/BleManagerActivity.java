@@ -316,7 +316,7 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
     }
 
     private void getBleDeviceInfo(BleDevice bleDevice, String password) {
-        int msgId = MQTTConstants.CONFIG_MSG_ID_SCAN_CONFIG;
+        int msgId = MQTTConstants.CONFIG_MSG_ID_BLE_BXP_BUTTON_CONNECT;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("mac", bleDevice.mac);
         jsonObject.addProperty("passwd", password);
@@ -346,7 +346,7 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
         back();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         if (isWindowLocked()) return;
         back();
     }

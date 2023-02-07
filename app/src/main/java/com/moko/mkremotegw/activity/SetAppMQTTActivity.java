@@ -165,11 +165,13 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
     }
 
     public void onBack(View view) {
+        if (isWindowLocked()) return;
         back();
     }
 
     @Override
     public void onBackPressed() {
+        if (isWindowLocked()) return;
         back();
     }
 

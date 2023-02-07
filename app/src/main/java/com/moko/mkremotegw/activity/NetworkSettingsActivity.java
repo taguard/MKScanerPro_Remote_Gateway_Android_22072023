@@ -146,14 +146,14 @@ public class NetworkSettingsActivity extends BaseActivity<ActivityNetworkSetting
 
     public void onSave(View view) {
         if (isWindowLocked()) return;
-        if (isVerify()) {
+        if (!isParaError()) {
             saveParams();
         } else {
             ToastUtils.showToast(this, "Para Error");
         }
     }
 
-    private boolean isVerify() {
+    private boolean isParaError() {
         if (!mBind.cbDhcp.isChecked()) {
             String ip = mBind.etIp.getText().toString();
             String mask = mBind.etMask.getText().toString();
@@ -167,9 +167,9 @@ public class NetworkSettingsActivity extends BaseActivity<ActivityNetworkSetting
                     || !matcherMask.matches()
                     || !matcherGateway.matches()
                     || !matcherDns.matches())
-                return false;
+                return true;
         }
-        return true;
+        return false;
     }
 
     private void saveParams() {
@@ -211,18 +211,7 @@ public class NetworkSettingsActivity extends BaseActivity<ActivityNetworkSetting
 
     }
 
-    @Override
-    public void onBackPressed() {
-        if (isWindowLocked()) return;
-        back();
-    }
-
-    private void back() {
-        finish();
-    }
-
     public void onBack(View view) {
-        if (isWindowLocked()) return;
-        back();
+        finish();
     }
 }

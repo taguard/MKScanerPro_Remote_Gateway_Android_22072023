@@ -134,10 +134,6 @@ public class NetworkReportIntervalActivity extends BaseActivity<ActivityNetworkR
     public void onSave(View view) {
         if (isWindowLocked()) return;
         String intervalStr = mBind.etNetworkReportInterval.getText().toString();
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
         if (TextUtils.isEmpty(intervalStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;
@@ -145,6 +141,10 @@ public class NetworkReportIntervalActivity extends BaseActivity<ActivityNetworkR
         int interval = Integer.parseInt(intervalStr);
         if (interval != 0 && (interval < 30 || interval > 86400)) {
             ToastUtils.showToast(this, "Para Error");
+            return;
+        }
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
             return;
         }
         mHandler.postDelayed(() -> {

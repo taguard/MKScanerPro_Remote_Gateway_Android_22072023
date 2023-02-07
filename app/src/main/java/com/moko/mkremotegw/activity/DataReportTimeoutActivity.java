@@ -137,10 +137,6 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
     public void onSave(View view) {
         if (isWindowLocked()) return;
         String timeoutStr = mBind.etDataReportTimeout.getText().toString();
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
         if (TextUtils.isEmpty(timeoutStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;
@@ -148,6 +144,10 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
         int timeout = Integer.parseInt(timeoutStr);
         if (timeout > 60) {
             ToastUtils.showToast(this, "Para Error");
+            return;
+        }
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
             return;
         }
         mHandler.postDelayed(() -> {

@@ -147,10 +147,6 @@ public class FilterMacAddressActivity extends BaseActivity<ActivityFilterMacAddr
         }
     }
 
-    public void onBack(View view) {
-        finish();
-    }
-
     public void onSave(View view) {
         if (isWindowLocked()) return;
         if (isValid()) {

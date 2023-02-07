@@ -134,10 +134,6 @@ public class ReconnectTimeoutActivity extends BaseActivity<ActivityReconnectTime
     public void onSave(View view) {
         if (isWindowLocked()) return;
         String timeoutStr = mBind.etReconnectTimeout.getText().toString();
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
         if (TextUtils.isEmpty(timeoutStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;
@@ -145,6 +141,10 @@ public class ReconnectTimeoutActivity extends BaseActivity<ActivityReconnectTime
         int timeout = Integer.parseInt(timeoutStr);
         if (timeout > 1440) {
             ToastUtils.showToast(this, "Para Error");
+            return;
+        }
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
             return;
         }
         mHandler.postDelayed(() -> {

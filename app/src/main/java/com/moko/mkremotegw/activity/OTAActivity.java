@@ -80,6 +80,30 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
             e.printStackTrace();
             return;
         }
+        if (msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
+            Type type = new TypeToken<MsgNotify<JsonObject>>() {
+            }.getType();
+            MsgNotify<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            int status = result.data.get("status").getAsInt();
+            if (status == 1) {
+                ToastUtils.showToast(this, "Device is OTA, please wait");
+                return;
+            }
+            String hostStr = mBind.etHost.getText().toString();
+            String portStr = mBind.etPort.getText().toString();
+            String filePathStr = mBind.etFilePath.getText().toString();
+            XLog.i("升级固件");
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                ToastUtils.showToast(this, "Set up failed");
+            }, 50 * 1000);
+            showLoadingProgressDialog();
+            setOTA(hostStr, Integer.parseInt(portStr), filePathStr);
+        }
         if (msg_id == MQTTConstants.NOTIFY_MSG_ID_OTA_RESULT) {
             Type type = new TypeToken<MsgNotify<JsonObject>>() {
             }.getType();
@@ -117,16 +141,11 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
     }
 
     public void onBack(View view) {
-        if (isWindowLocked()) return;
         finish();
     }
 
     public void onStartUpdate(View view) {
         if (isWindowLocked()) return;
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
         String hostStr = mBind.etHost.getText().toString();
         String portStr = mBind.etPort.getText().toString();
         String filePathStr = mBind.etFilePath.getText().toString();
@@ -142,13 +161,27 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
             ToastUtils.showToast(this, R.string.mqtt_verify_file_path);
             return;
         }
-        XLog.i("升级固件");
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
+            return;
+        }
+        XLog.i("查询设备当前状态");
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             ToastUtils.showToast(this, "Set up failed");
         }, 50 * 1000);
         showLoadingProgressDialog();
-        setOTA(hostStr, Integer.parseInt(portStr), filePathStr);
+        getDeviceStatus();
+    }
+
+    private void getDeviceStatus() {
+        int msgId = MQTTConstants.READ_MSG_ID_DEVICE_STATUS;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 
     private void setOTA(String host, int port, String filePath) {

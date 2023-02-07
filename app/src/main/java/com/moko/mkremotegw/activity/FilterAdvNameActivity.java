@@ -163,10 +163,6 @@ public class FilterAdvNameActivity extends BaseActivity<ActivityFilterAdvNameBin
         }
     }
 
-    public void onBack(View view) {
-        finish();
-    }
-
     public void onSave(View view) {
         if (isWindowLocked()) return;
         if (isValid()) {

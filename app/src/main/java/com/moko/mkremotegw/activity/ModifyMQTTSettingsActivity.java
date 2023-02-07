@@ -192,6 +192,26 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             e.printStackTrace();
             return;
         }
+        if (msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
+            Type type = new TypeToken<MsgNotify<JsonObject>>() {
+            }.getType();
+            MsgNotify<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            int status = result.data.get("status").getAsInt();
+            if (status == 1) {
+                ToastUtils.showToast(this, "Device is OTA, please wait");
+                return;
+            }
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                ToastUtils.showToast(this, "Set up failed");
+            }, 30 * 1000);
+            showLoadingProgressDialog();
+            setMqttSettings();
+        }
         if (msg_id == MQTTConstants.READ_MSG_ID_MQTT_SETTINGS) {
             Type type = new TypeToken<MsgReadResult<JsonObject>>() {
             }.getType();
@@ -287,11 +307,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
     public void onSave(View view) {
         if (isWindowLocked()) return;
         if (isParaError()) return;
-        mHandler.postDelayed(() -> {
-            dismissLoadingProgressDialog();
-            ToastUtils.showToast(this, "Set up failed");
-        }, 30 * 1000);
-        showLoadingProgressDialog();
         saveParams();
     }
 
@@ -304,6 +319,30 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
 
     private void saveParams() {
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
+            return;
+        }
+        XLog.i("查询设备当前状态");
+        mHandler.postDelayed(() -> {
+            dismissLoadingProgressDialog();
+            ToastUtils.showToast(this, "Set up failed");
+        }, 50 * 1000);
+        showLoadingProgressDialog();
+        getDeviceStatus();
+    }
+
+    private void getDeviceStatus() {
+        int msgId = MQTTConstants.READ_MSG_ID_DEVICE_STATUS;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setMqttSettings() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_MQTT_SETTINGS;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("security_type", sslFragment.getConnectMode());
@@ -676,7 +715,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
                                 if (mqttDeviceConfig.connectMode > 0) {
                                     Cell cell = sheet.getRow(12).getCell(1);
                                     if (cell != null)
-                                        // 1/2
+                                        // 1/2/3
                                         mqttDeviceConfig.connectMode = Integer.parseInt(cell.getStringCellValue().replaceAll("value:", ""));
                                 }
                             }

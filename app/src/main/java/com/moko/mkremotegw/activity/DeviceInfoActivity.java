@@ -95,7 +95,7 @@ public class DeviceInfoActivity extends BaseActivity<ActivityDeviceInformationBi
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

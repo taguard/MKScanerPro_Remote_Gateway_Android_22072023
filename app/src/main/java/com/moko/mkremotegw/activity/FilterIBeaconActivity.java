@@ -110,7 +110,7 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -122,10 +122,6 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
         } catch (MqttException e) {
             e.printStackTrace();
         }
-    }
-
-    public void onBack(View view) {
-        finish();
     }
 
     public void onSave(View view) {
