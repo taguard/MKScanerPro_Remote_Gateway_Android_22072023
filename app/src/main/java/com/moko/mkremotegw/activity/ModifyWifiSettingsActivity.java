@@ -52,6 +52,12 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
 
     @Override
     protected void onCreate() {
+        mBind.cbVerifyServer.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (mSecuritySelected != 0 && mEAPTypeSelected != 2)
+                mBind.clHost.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            mBind.clPort.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+            mBind.clCa.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        });
         mSecurityValues = new ArrayList<>();
         mSecurityValues.add("Personal");
         mSecurityValues.add("Enterprise");
@@ -119,10 +125,7 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             mBind.etPassword.setText(result.data.get("passwd").getAsString());
             mBind.etDomainId.setText(result.data.get("eap_id").getAsString());
             mBind.tvSecurity.setText(mSecurityValues.get(mSecuritySelected));
-            mBind.clEapType.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            mBind.clHost.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            mBind.clPort.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            mBind.clCa.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
+            mBind.clEapType.setVisibility(mSecuritySelected != 0 ? View.VISIBLE : View.GONE);
 
             mEAPTypeSelected = result.data.get("eap_type").getAsInt();
             mBind.tvEpaType.setText(mEAPTypeValues.get(mEAPTypeSelected));
@@ -133,6 +136,15 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                 mBind.etPassword.setText(result.data.get("eap_passwd").getAsString());
                 mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
                 mBind.cbVerifyServer.setChecked(result.data.get("eap_verify_server").getAsInt() == 1);
+                if (mEAPTypeSelected != 2) {
+                    mBind.clCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                    mBind.clHost.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                    mBind.clPort.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                } else {
+                    mBind.clCa.setVisibility(View.VISIBLE);
+                    mBind.clHost.setVisibility(View.VISIBLE);
+                    mBind.clPort.setVisibility(View.VISIBLE);
+                }
             }
             mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
@@ -250,14 +262,33 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
         dialog.setListener(value -> {
             mSecuritySelected = value;
             mBind.tvSecurity.setText(mSecurityValues.get(value));
-            mBind.clEapType.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            mBind.clHost.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            mBind.clPort.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            mBind.clCa.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            if (mSecuritySelected != 0) {
+            mBind.clEapType.setVisibility(mSecuritySelected != 0 ? View.VISIBLE : View.GONE);
+            if (mSecuritySelected == 0) {
+                mBind.clHost.setVisibility(View.GONE);
+                mBind.clPort.setVisibility(View.GONE);
+                mBind.clCa.setVisibility(View.GONE);
+                mBind.clUsername.setVisibility(View.GONE);
+                mBind.clPassword.setVisibility(View.VISIBLE);
+                mBind.cbVerifyServer.setVisibility(View.GONE);
+                mBind.clDomainId.setVisibility(View.GONE);
+                mBind.clCert.setVisibility(View.GONE);
+                mBind.clKey.setVisibility(View.GONE);
+            } else {
+                if (mEAPTypeSelected != 2) {
+                    mBind.clHost.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                    mBind.clPort.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                    mBind.clCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                } else {
+                    mBind.clHost.setVisibility(View.VISIBLE);
+                    mBind.clPort.setVisibility(View.VISIBLE);
+                    mBind.clCa.setVisibility(View.VISIBLE);
+                }
                 mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
+                mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE: View.GONE);
+                mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+                mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             }
         });
         dialog.show(getSupportFragmentManager());
@@ -274,6 +305,15 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
             mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
             mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+            if (mEAPTypeSelected != 2) {
+                mBind.clHost.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                mBind.clPort.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                mBind.clCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+            } else {
+                mBind.clHost.setVisibility(View.VISIBLE);
+                mBind.clPort.setVisibility(View.VISIBLE);
+                mBind.clCa.setVisibility(View.VISIBLE);
+            }
             mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
         });
@@ -294,36 +334,29 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
         if (!TextUtils.isEmpty(ssid))
             return false;
         if (mSecuritySelected != 0) {
+            if (mEAPTypeSelected != 2 && !mBind.cbVerifyServer.isChecked()) {
+                return true;
+            }
             String host = mBind.etHost.getText().toString();
-            String port = mBind.etPort.getText().toString();
+            String portStr = mBind.etPort.getText().toString();
             String caFilePath = mBind.etCaFilePath.getText().toString();
-            return !TextUtils.isEmpty(host)
-                    && !TextUtils.isEmpty(port)
-                    && !TextUtils.isEmpty(caFilePath);
+            if (TextUtils.isEmpty(host) || TextUtils.isEmpty(portStr) || TextUtils.isEmpty(caFilePath))
+                return false;
+            int port = Integer.parseInt(portStr);
+            if (port < 1 || port > 65535)
+                return false;
         }
         return true;
     }
 
     private void saveParams() {
-        String portStr = mBind.etPort.getText().toString();
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
+        if (!mMokoDevice.isOnline && mBind.cbVerifyServer.isChecked()) {
             ToastUtils.showToast(this, R.string.device_offline);
             return;
-        }
-        if (mSecuritySelected != 0) {
-            if (TextUtils.isEmpty(portStr)) {
-                ToastUtils.showToast(this, "Para Error");
-                return;
-            }
-            int port = Integer.parseInt(portStr);
-            if (port < 1 || port > 65535) {
-                ToastUtils.showToast(this, "Para Error");
-                return;
-            }
         }
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();

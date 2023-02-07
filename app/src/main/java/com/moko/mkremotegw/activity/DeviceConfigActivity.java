@@ -326,5 +326,13 @@ public class DeviceConfigActivity extends BaseActivity<ActivityDeviceConfigBindi
         } catch (MqttException e) {
             e.printStackTrace();
         }
+        // 订阅遗愿主题
+        try {
+            if (mAppMqttConfig.lwtEnable && !TextUtils.isEmpty(mAppMqttConfig.lwtTopic)) {
+                MQTTSupport.getInstance().subscribe(mDeviceMqttConfig.lwtTopic, mAppMqttConfig.qos);
+            }
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -197,10 +197,6 @@ public class SystemTimeActivity extends BaseActivity<ActivitySystemTimeProBindin
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, SyncTimeFromNTPActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -225,10 +221,6 @@ public class SystemTimeActivity extends BaseActivity<ActivitySystemTimeProBindin
         dialog.setListener(value -> {
             if (!MQTTSupport.getInstance().isConnected()) {
                 ToastUtils.showToast(this, R.string.network_error);
-                return;
-            }
-            if (!mMokoDevice.isOnline) {
-                ToastUtils.showToast(this, R.string.device_offline);
                 return;
             }
             mSelectedTimeZone = value;

@@ -18,7 +18,7 @@ public class MQTTConfig implements Serializable {
     public String clientCertPath = "";
     public String topicSubscribe = "";
     public String topicPublish = "";
-    public boolean lwtEnable;
+    public boolean lwtEnable = true;
     public boolean lwtRetain;
     public int lwtQos = 1;
     public String lwtTopic = "";

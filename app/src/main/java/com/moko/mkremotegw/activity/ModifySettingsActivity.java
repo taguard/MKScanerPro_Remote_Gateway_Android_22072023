@@ -113,10 +113,6 @@ public class ModifySettingsActivity extends BaseActivity<ActivityModifySettingsB
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, ModifyWifiSettingsActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -127,10 +123,6 @@ public class ModifySettingsActivity extends BaseActivity<ActivityModifySettingsB
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, ModifyMQTTSettingsActivity.class);
@@ -160,10 +152,6 @@ public class ModifySettingsActivity extends BaseActivity<ActivityModifySettingsB
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, ModifyNetworkSettingsActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -173,10 +161,6 @@ public class ModifySettingsActivity extends BaseActivity<ActivityModifySettingsB
         if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         mHandler.postDelayed(() -> {

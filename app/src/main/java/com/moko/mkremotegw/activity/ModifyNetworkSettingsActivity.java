@@ -46,6 +46,9 @@ public class ModifyNetworkSettingsActivity extends BaseActivity<ActivityNetworkS
     @Override
     protected void onCreate() {
         pattern = Pattern.compile(IP_REGEX);
+        mBind.cbDhcp.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            mBind.clIp.setVisibility(isChecked ? View.GONE : View.VISIBLE);
+        });
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
@@ -90,7 +93,7 @@ public class ModifyNetworkSettingsActivity extends BaseActivity<ActivityNetworkS
             mHandler.removeMessages(0);
             int enable = result.data.get("dhcp_en").getAsInt();
             mBind.cbDhcp.setChecked(enable == 1);
-            mBind.clIp.setVisibility(enable == 1 ? View.VISIBLE : View.GONE);
+            mBind.clIp.setVisibility(enable == 1 ? View.GONE : View.VISIBLE);
 
             mBind.etIp.setText( result.data.get("ip").getAsString());
             mBind.etMask.setText(result.data.get("netmask").getAsString());
@@ -155,10 +158,6 @@ public class ModifyNetworkSettingsActivity extends BaseActivity<ActivityNetworkS
                 ToastUtils.showToast(this, R.string.network_error);
                 return;
             }
-            if (!mMokoDevice.isOnline) {
-                ToastUtils.showToast(this, R.string.device_offline);
-                return;
-            }
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 ToastUtils.showToast(this, "Set up failed");
@@ -171,7 +170,7 @@ public class ModifyNetworkSettingsActivity extends BaseActivity<ActivityNetworkS
     }
 
     private boolean isVerify() {
-        if (mBind.cbDhcp.isChecked()) {
+        if (!mBind.cbDhcp.isChecked()) {
             String ip = mBind.etIp.getText().toString();
             String mask = mBind.etMask.getText().toString();
             String gateway = mBind.etGateway.getText().toString();

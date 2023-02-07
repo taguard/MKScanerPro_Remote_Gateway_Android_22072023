@@ -127,10 +127,6 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         String hostStr = mBind.etHost.getText().toString();
         String portStr = mBind.etPort.getText().toString();
         String filePathStr = mBind.etFilePath.getText().toString();

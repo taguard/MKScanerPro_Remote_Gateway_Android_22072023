@@ -142,13 +142,29 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
 
 
     private void saveParams() {
+        String majorMinStr = mBind.etIbeaconMajorMin.getText().toString();
+        String majorMaxStr = mBind.etIbeaconMajorMax.getText().toString();
+        int majorMin = 0;
+        int majorMax = 65535;
+        if (!TextUtils.isEmpty(majorMinStr))
+            majorMin = Integer.parseInt(majorMinStr);
+        if (!TextUtils.isEmpty(majorMaxStr))
+            majorMax = Integer.parseInt(majorMaxStr);
+        String minorMinStr = mBind.etIbeaconMinorMin.getText().toString();
+        String minorMaxStr = mBind.etIbeaconMinorMax.getText().toString();
+        int minorMin = 0;
+        int minorMax = 65535;
+        if (!TextUtils.isEmpty(minorMinStr))
+            minorMin = Integer.parseInt(minorMinStr);
+        if (!TextUtils.isEmpty(minorMaxStr))
+            minorMax = Integer.parseInt(minorMaxStr);
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_IBEACON;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("switch", mBind.cbIbeacon.isChecked() ? 1 : 0);
-        jsonObject.addProperty("min_major", Integer.parseInt(mBind.etIbeaconMajorMin.getText().toString()));
-        jsonObject.addProperty("max_major", Integer.parseInt(mBind.etIbeaconMajorMax.getText().toString()));
-        jsonObject.addProperty("min_minor", Integer.parseInt(mBind.etIbeaconMinorMin.getText().toString()));
-        jsonObject.addProperty("max_minor", Integer.parseInt(mBind.etIbeaconMinorMax.getText().toString()));
+        jsonObject.addProperty("min_major", majorMin);
+        jsonObject.addProperty("max_major", majorMax);
+        jsonObject.addProperty("min_minor", minorMin);
+        jsonObject.addProperty("max_minor", minorMax);
         jsonObject.addProperty("uuid", mBind.etIbeaconUuid.getText().toString());
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
@@ -167,43 +183,48 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
         if (!TextUtils.isEmpty(uuid)) {
             int length = uuid.length();
             if (length % 2 != 0) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "UUID Error");
                 return false;
             }
         }
         if (!TextUtils.isEmpty(majorMin) && !TextUtils.isEmpty(majorMax)) {
             if (Integer.parseInt(majorMin) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Major Error");
                 return false;
             }
             if (Integer.parseInt(majorMax) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Major Error");
                 return false;
             }
             if (Integer.parseInt(majorMax) < Integer.parseInt(majorMin)) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Major Error");
                 return false;
             }
-        } else if (TextUtils.isEmpty(majorMin) || TextUtils.isEmpty(majorMax)) {
-            ToastUtils.showToast(this, "Para Error");
+        } else if (!TextUtils.isEmpty(majorMin) && TextUtils.isEmpty(majorMax)) {
+            ToastUtils.showToast(this, "Major Error");
+            return false;
+        } else if (TextUtils.isEmpty(majorMin) && !TextUtils.isEmpty(majorMax)) {
+            ToastUtils.showToast(this, "Major Error");
             return false;
         }
-
         if (!TextUtils.isEmpty(minorMin) && !TextUtils.isEmpty(minorMax)) {
             if (Integer.parseInt(minorMin) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Minor Error");
                 return false;
             }
             if (Integer.parseInt(minorMax) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Minor Error");
                 return false;
             }
             if (Integer.parseInt(minorMax) < Integer.parseInt(minorMin)) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Minor Error");
                 return false;
             }
-        } else if (TextUtils.isEmpty(minorMin) || TextUtils.isEmpty(minorMax)) {
-            ToastUtils.showToast(this, "Para Error");
+        } else if (!TextUtils.isEmpty(minorMin) && TextUtils.isEmpty(minorMax)) {
+            ToastUtils.showToast(this, "Minor Error");
+            return false;
+        } else if (TextUtils.isEmpty(minorMin) && !TextUtils.isEmpty(minorMax)) {
+            ToastUtils.showToast(this, "Minor Error");
             return false;
         }
         return true;

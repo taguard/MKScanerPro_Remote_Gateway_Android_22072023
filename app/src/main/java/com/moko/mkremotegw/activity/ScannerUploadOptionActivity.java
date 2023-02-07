@@ -100,7 +100,7 @@ public class ScannerUploadOptionActivity extends BaseActivity<ActivityScannerUpl
             MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
             if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
                 return;
-            final int rssi = result.data.get("").getAsInt();
+            final int rssi = result.data.get("rssi").getAsInt();
             int progress = rssi + 127;
             mBind.sbRssiFilter.setProgress(progress);
             mBind.tvRssiFilterValue.setText(String.format("%ddBm", rssi));
@@ -217,10 +217,6 @@ public class ScannerUploadOptionActivity extends BaseActivity<ActivityScannerUpl
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, DuplicateDataFilterActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -231,10 +227,6 @@ public class ScannerUploadOptionActivity extends BaseActivity<ActivityScannerUpl
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, UploadDataOptionActivity.class);
@@ -249,10 +241,6 @@ public class ScannerUploadOptionActivity extends BaseActivity<ActivityScannerUpl
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, FilterMacAddressActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -263,10 +251,6 @@ public class ScannerUploadOptionActivity extends BaseActivity<ActivityScannerUpl
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, FilterAdvNameActivity.class);
@@ -281,10 +265,6 @@ public class ScannerUploadOptionActivity extends BaseActivity<ActivityScannerUpl
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, FilterRawDataSwitchActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -294,10 +274,6 @@ public class ScannerUploadOptionActivity extends BaseActivity<ActivityScannerUpl
         if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         mHandler.postDelayed(() -> {

@@ -200,7 +200,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
 
     public void onSave(View view) {
         if (isWindowLocked()) return;
-        if (isVerify()) return;
+        if (isParaError()) return;
         String mqttConfigStr = new Gson().toJson(mqttConfig, MQTTConfig.class);
         SPUtiles.setStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, mqttConfigStr);
         MQTTSupport.getInstance().disconnectMqtt();
@@ -222,7 +222,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
         }, 2000);
     }
 
-    private boolean isVerify() {
+    private boolean isParaError() {
         String host = mBind.etMqttHost.getText().toString().replaceAll(" ", "");
         String port = mBind.etMqttPort.getText().toString();
         String clientId = mBind.etMqttClientId.getText().toString().replaceAll(" ", "");
@@ -296,6 +296,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
 
     public void onExportSettings(View view) {
         if (isWindowLocked()) return;
+        if (isParaError()) return;
         mqttConfig.host = mBind.etMqttHost.getText().toString().replaceAll(" ", "");
         mqttConfig.port = mBind.etMqttPort.getText().toString();
         mqttConfig.clientId = mBind.etMqttClientId.getText().toString().replaceAll(" ", "");
@@ -380,7 +381,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
                     row9.createCell(1).setCellValue(String.format("value:%s", mqttConfig.username));
 //                else
 //                    row9.createCell(1).setCellValue("");
-                row9.createCell(2).setCellValue("0-128 characters");
+                row9.createCell(2).setCellValue("0-256 characters");
 
                 XSSFRow row10 = sheet.createRow(10);
                 row10.createCell(0).setCellValue("MQTT Password");
@@ -388,7 +389,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
                     row10.createCell(1).setCellValue(String.format("value:%s", mqttConfig.password));
 //                else
 //                    row10.createCell(1).setCellValue("");
-                row10.createCell(2).setCellValue("0-128 characters");
+                row10.createCell(2).setCellValue("0-256 characters");
 
                 XSSFRow row11 = sheet.createRow(11);
                 row11.createCell(0).setCellValue("SSL/TLS");
@@ -402,7 +403,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
                     row12.createCell(1).setCellValue("value:1");
                 }
                 row11.createCell(2).setCellValue("Range: 0/1 0:Disable SSL (TCP mode) 1:Enable SSL");
-                row12.createCell(2).setCellValue("Valid when SSL is enabled, range: 1/2 1: CA certificate file 2: Self signed certificates");
+                row12.createCell(2).setCellValue("Valid when SSL is enabled, range: 1/2/3 1: CA certificate file 2: CA certificate file 3: Self signed certificates");
 
                 Uri uri = Uri.fromFile(expertFile);
                 try {
@@ -464,10 +465,10 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
                         try {
                             Workbook workbook = WorkbookFactory.create(paramFile);
                             Sheet sheet = workbook.getSheetAt(0);
-                            int rows = sheet.getLastRowNum();
+                            int rows = sheet.getPhysicalNumberOfRows();
                             int columns = sheet.getRow(0).getPhysicalNumberOfCells();
                             // 从第二行开始
-                            if (rows != 13 && columns != 3) {
+                            if (rows < 13 || columns < 3) {
                                 runOnUiThread(() -> {
                                     dismissLoadingProgressDialog();
                                     ToastUtils.showToast(SetAppMQTTActivity.this, "Please select the correct file!");
@@ -515,7 +516,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
                                 if (mqttConfig.connectMode > 0) {
                                     Cell cell = sheet.getRow(12).getCell(1);
                                     if (cell != null)
-                                        // 1/2
+                                        // 1/2/3
                                         mqttConfig.connectMode = Integer.parseInt(cell.getStringCellValue().replaceAll("value:", ""));
                                 }
                             }

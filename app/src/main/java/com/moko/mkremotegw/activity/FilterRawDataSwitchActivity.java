@@ -104,7 +104,7 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             mBind.tvFilterByBxpButton.setText(result.data.get("bxp_button").getAsInt() == 1 ? "ON" : "OFF");
             mBind.tvFilterByBxpTag.setText(result.data.get("bxp_tag").getAsInt() == 1 ? "ON" : "OFF");
             mBind.tvFilterByPir.setText(result.data.get("pir").getAsInt() == 1 ? "ON" : "OFF");
-            mBind.tvFilterByOther.setText(result.data.get("eddystone_uid").getAsInt() == 1 ? "ON" : "OFF");
+            mBind.tvFilterByOther.setText(result.data.get("other").getAsInt() == 1 ? "ON" : "OFF");
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_DEVICE_INFO
                 || msg_id == MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_ACC
@@ -209,7 +209,7 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
 
     private void setBXPTH() {
         isBXPTHOpen = !isBXPTHOpen;
-        int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_ACC;
+        int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_TH;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("switch", isBXPTHOpen ? 1 : 0);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
@@ -227,10 +227,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, FilterIBeaconActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startFilterDetail.launch(i);
@@ -241,10 +237,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, FilterUIDActivity.class);
@@ -259,10 +251,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, FilterUrlActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startFilterDetail.launch(i);
@@ -273,10 +261,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, FilterTLMActivity.class);
@@ -291,10 +275,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, FilterBXPButtonActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startFilterDetail.launch(i);
@@ -305,10 +285,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, FilterBXPTagActivity.class);
@@ -323,10 +299,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, FilterPIRActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startFilterDetail.launch(i);
@@ -338,10 +310,6 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, FilterOtherActivity.class);

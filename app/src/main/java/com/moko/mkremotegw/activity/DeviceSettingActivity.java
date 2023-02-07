@@ -65,8 +65,8 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
     protected void onCreate() {
         mValues = new ArrayList<>();
         mValues.add("Disable");
-        mValues.add("Press button 10 seconds within 1 minute after it is powered");
-        mValues.add("Press button 10 seconds any time");
+        mValues.add("Long press in 1 minute after powered");
+        mValues.add("Long press any time");
         filter = (source, start, end, dest, dstart, dend) -> {
             if (!(source + "").matches(FILTER_ASCII)) {
                 return "";
@@ -245,10 +245,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, IndicatorSettingActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -259,10 +255,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, NetworkReportIntervalActivity.class);
@@ -277,10 +269,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, ReconnectTimeoutActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -291,10 +279,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, CommunicationTimeoutActivity.class);
@@ -309,10 +293,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, DataReportTimeoutActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -323,10 +303,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, SystemTimeActivity.class);
@@ -357,10 +333,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent intent = new Intent(this, OTAActivity.class);
         intent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(intent);
@@ -374,10 +346,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, ModifySettingsActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -388,10 +356,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         Intent i = new Intent(this, DeviceInfoActivity.class);
@@ -408,10 +372,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         dialog.setOnAlertConfirmListener(() -> {
             if (!MQTTSupport.getInstance().isConnected()) {
                 ToastUtils.showToast(this, R.string.network_error);
-                return;
-            }
-            if (!mMokoDevice.isOnline) {
-                ToastUtils.showToast(this, R.string.device_offline);
                 return;
             }
             mHandler.postDelayed(() -> {
@@ -446,10 +406,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         dialog.setOnAlertConfirmListener(() -> {
             if (!MQTTSupport.getInstance().isConnected()) {
                 ToastUtils.showToast(this, R.string.network_error);
-                return;
-            }
-            if (!mMokoDevice.isOnline) {
-                ToastUtils.showToast(this, R.string.device_offline);
                 return;
             }
             mHandler.postDelayed(() -> {

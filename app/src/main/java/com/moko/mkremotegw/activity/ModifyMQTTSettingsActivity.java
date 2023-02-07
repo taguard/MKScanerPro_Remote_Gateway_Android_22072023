@@ -122,7 +122,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         });
         mBind.vpMqtt.setOffscreenPageLimit(4);
         mBind.rgMqtt.setOnCheckedChangeListener(this);
-        expertFilePath = RemoteMainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for Device Modify.xlsx";
+        expertFilePath = RemoteMainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for Device.xlsx";
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
@@ -133,7 +133,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             finish();
         }, 30 * 1000);
         showLoadingProgressDialog();
-        getMqttSettings();
+        mBind.etMqttHost.postDelayed(() -> getMqttSettings(), 1000);
     }
 
 
@@ -158,6 +158,8 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         mBind.etMqttHost.setText(mqttDeviceConfig.host);
         mBind.etMqttPort.setText(mqttDeviceConfig.port);
         mBind.etMqttClientId.setText(mqttDeviceConfig.clientId);
+        mBind.etMqttSubscribeTopic.setText(mqttDeviceConfig.topicSubscribe);
+        mBind.etMqttPublishTopic.setText(mqttDeviceConfig.topicPublish);
         generalFragment.setCleanSession(mqttDeviceConfig.cleanSession);
         generalFragment.setQos(mqttDeviceConfig.qos);
         generalFragment.setKeepAlive(mqttDeviceConfig.keepAlive);
@@ -200,8 +202,8 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             mHandler.removeMessages(0);
             sslFragment.setConnectMode(result.data.get("security_type").getAsInt());
             mBind.etMqttHost.setText(result.data.get("host").getAsString());
-            mBind.etMqttPort.setText(result.data.get("port").getAsInt());
-            mBind.etMqttClientId.setText(result.data.get("client_id").getAsInt());
+            mBind.etMqttPort.setText(String.valueOf(result.data.get("port").getAsInt()));
+            mBind.etMqttClientId.setText(result.data.get("client_id").getAsString());
             userFragment.setUserName(result.data.get("username").getAsString());
             userFragment.setPassword(result.data.get("passwd").getAsString());
             mBind.etMqttSubscribeTopic.setText(result.data.get("sub_topic").getAsString());
@@ -284,14 +286,13 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
     public void onSave(View view) {
         if (isWindowLocked()) return;
-        if (isValid()) {
-            mHandler.postDelayed(() -> {
-                dismissLoadingProgressDialog();
-                ToastUtils.showToast(this, "Set up failed");
-            }, 30 * 1000);
-            showLoadingProgressDialog();
-            saveParams();
-        }
+        if (isParaError()) return;
+        mHandler.postDelayed(() -> {
+            dismissLoadingProgressDialog();
+            ToastUtils.showToast(this, "Set up failed");
+        }, 30 * 1000);
+        showLoadingProgressDialog();
+        saveParams();
     }
 
 
@@ -350,7 +351,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         }
     }
 
-    private boolean isValid() {
+    private boolean isParaError() {
         String host = mBind.etMqttHost.getText().toString().trim();
         String port = mBind.etMqttPort.getText().toString().trim();
         String clientId = mBind.etMqttClientId.getText().toString().trim();
@@ -359,35 +360,35 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
         if (TextUtils.isEmpty(host)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_host));
-            return false;
+            return true;
         }
         if (TextUtils.isEmpty(port)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_port_empty));
-            return false;
+            return true;
         }
         if (Integer.parseInt(port) > 65535) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_port));
-            return false;
+            return true;
         }
         if (TextUtils.isEmpty(clientId)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_client_id_empty));
-            return false;
+            return true;
         }
         if (TextUtils.isEmpty(topicSubscribe)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_topic_subscribe));
-            return false;
+            return true;
         }
         if (TextUtils.isEmpty(topicPublish)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_topic_publish));
-            return false;
+            return true;
         }
         if (topicPublish.equals(topicSubscribe)) {
             ToastUtils.showToast(this, "Subscribed and published topic can't be same !");
-            return false;
+            return true;
         }
         if (!generalFragment.isValid() || !sslFragment.isValid() || !lwtFragment.isValid())
-            return false;
-        return true;
+            return true;
+        return false;
     }
 
     @Override
@@ -414,8 +415,8 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
     }
 
     public void onExportSettings(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
+        if (isParaError()) return;
         mqttDeviceConfig.host = mBind.etMqttHost.getText().toString().replaceAll(" ", "");
         mqttDeviceConfig.port = mBind.etMqttPort.getText().toString();
         mqttDeviceConfig.clientId = mBind.etMqttClientId.getText().toString().replaceAll(" ", "");
@@ -508,7 +509,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
                     row9.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.username));
 //                else
 //                    row9.createCell(1).setCellValue("");
-                row9.createCell(2).setCellValue("0-128 characters");
+                row9.createCell(2).setCellValue("0-256 characters");
 
                 XSSFRow row10 = sheet.createRow(10);
                 row10.createCell(0).setCellValue("MQTT Password");
@@ -516,7 +517,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
                     row10.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.password));
 //                else
 //                    row10.createCell(1).setCellValue("");
-                row10.createCell(2).setCellValue("0-128 characters");
+                row10.createCell(2).setCellValue("0-256 characters");
 
                 XSSFRow row11 = sheet.createRow(11);
                 row11.createCell(0).setCellValue("SSL/TLS");
@@ -530,7 +531,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
                     row12.createCell(1).setCellValue("value:1");
                 }
                 row11.createCell(2).setCellValue("Range: 0/1 0:Disable SSL (TCP mode) 1:Enable SSL");
-                row12.createCell(2).setCellValue("Valid when SSL is enabled, range: 1/2 1: CA certificate file 2: Self signed certificates");
+                row12.createCell(2).setCellValue("Valid when SSL is enabled, range: 1/2/3 1: CA certificate file 2: CA certificate file 3: Self signed certificates");
 
                 XSSFRow row13 = sheet.createRow(13);
                 row13.createCell(0).setCellValue("LWT");
@@ -624,10 +625,10 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
                         try {
                             Workbook workbook = WorkbookFactory.create(paramFile);
                             Sheet sheet = workbook.getSheetAt(0);
-                            int rows = sheet.getLastRowNum();
+                            int rows = sheet.getPhysicalNumberOfRows();
                             int columns = sheet.getRow(0).getPhysicalNumberOfCells();
                             // 从第二行开始
-                            if (rows < 25 || columns < 3) {
+                            if (rows < 18 || columns < 3) {
                                 runOnUiThread(() -> {
                                     dismissLoadingProgressDialog();
                                     ToastUtils.showToast(ModifyMQTTSettingsActivity.this, "Please select the correct file!");

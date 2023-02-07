@@ -51,6 +51,10 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
 
     @Override
     protected void onCreate() {
+        mBind.cbVerifyServer.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (mSecuritySelected != 0 && mEAPTypeSelected != 2)
+                mBind.llCa.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        });
         mSecurityValues = new ArrayList<>();
         mSecurityValues.add("Personal");
         mSecurityValues.add("Enterprise");
@@ -130,20 +134,11 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                                 switch (configKeyEnum) {
                                     case KEY_WIFI_CLIENT_KEY:
                                     case KEY_WIFI_CLIENT_CERT:
-                                        if (result != 1) {
-                                            mSavedParamsError = true;
-                                        }
-                                        break;
                                     case KEY_WIFI_CA:
                                         if (result != 1) {
                                             mSavedParamsError = true;
                                         }
-                                        if (mSavedParamsError) {
-                                            ToastUtils.showToast(this, "Setup failed！");
-                                        } else {
-                                            mIsSaved = true;
-                                            ToastUtils.showToast(this, "Setup succeed！");
-                                        }
+                                        break;
                                 }
                             }
                         }
@@ -158,17 +153,17 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                                 int result = value[4] & 0xFF;
                                 switch (configKeyEnum) {
                                     case KEY_WIFI_SECURITY_TYPE:
-                                    case KEY_WIFI_EAP_TYPE:
                                     case KEY_WIFI_SSID:
                                     case KEY_WIFI_EAP_USERNAME:
                                     case KEY_WIFI_EAP_PASSWORD:
                                     case KEY_WIFI_EAP_DOMAIN_ID:
                                     case KEY_WIFI_EAP_VERIFY_SERVICE_ENABLE:
+                                    case KEY_WIFI_PASSWORD:
                                         if (result != 1) {
                                             mSavedParamsError = true;
                                         }
                                         break;
-                                    case KEY_WIFI_PASSWORD:
+                                    case KEY_WIFI_EAP_TYPE:
                                         if (result != 1) {
                                             mSavedParamsError = true;
                                         }
@@ -189,8 +184,16 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                                     case KEY_WIFI_SECURITY_TYPE:
                                         mSecuritySelected = value[4];
                                         mBind.tvSecurity.setText(mSecurityValues.get(mSecuritySelected));
-                                        mBind.clEapType.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-                                        mBind.llCa.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
+                                        mBind.clEapType.setVisibility(mSecuritySelected != 0 ? View.VISIBLE : View.GONE);
+                                        if (mSecuritySelected == 0) {
+                                            mBind.llCa.setVisibility(View.GONE);
+                                        } else {
+                                            if (mEAPTypeSelected != 2) {
+                                                mBind.llCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                                            } else {
+                                                mBind.llCa.setVisibility(View.VISIBLE);
+                                            }
+                                        }
                                         break;
                                     case KEY_WIFI_SSID:
                                         mBind.etSsid.setText(new String(Arrays.copyOfRange(value, 4, 4 + length)));
@@ -206,6 +209,10 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                                             mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                                             mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                                             mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
+                                            if (mEAPTypeSelected != 2)
+                                                mBind.llCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                                            else
+                                                mBind.llCa.setVisibility(View.VISIBLE);
                                         }
                                         mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                                         mBind.llCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
@@ -219,6 +226,8 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                                         break;
                                     case KEY_WIFI_EAP_VERIFY_SERVICE_ENABLE:
                                         mBind.cbVerifyServer.setChecked(value[4] == 1);
+                                        if (mSecuritySelected != 0 && mEAPTypeSelected != 2)
+                                            mBind.llCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
                                         break;
 
                                 }
@@ -237,12 +246,27 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
         dialog.setListener(value -> {
             mSecuritySelected = value;
             mBind.tvSecurity.setText(mSecurityValues.get(value));
-            mBind.clEapType.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            mBind.llCa.setVisibility(mSecuritySelected == 0 ? View.GONE : View.VISIBLE);
-            if (mSecuritySelected != 0) {
+            mBind.clEapType.setVisibility(mSecuritySelected != 0 ? View.VISIBLE : View.GONE);
+            if (mSecuritySelected == 0) {
+                mBind.llCa.setVisibility(View.GONE);
+                mBind.clUsername.setVisibility(View.GONE);
+                mBind.clPassword.setVisibility(View.VISIBLE);
+                mBind.cbVerifyServer.setVisibility(View.GONE);
+                mBind.clDomainId.setVisibility(View.GONE);
+                mBind.llCert.setVisibility(View.GONE);
+                mBind.llKey.setVisibility(View.GONE);
+            } else {
+                if (mEAPTypeSelected != 2) {
+                    mBind.llCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+                } else {
+                    mBind.llCa.setVisibility(View.VISIBLE);
+                }
                 mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
+                mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE: View.GONE);
+                mBind.llCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+                mBind.llKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             }
         });
         dialog.show(getSupportFragmentManager());
@@ -259,6 +283,10 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
             mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
             mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
             mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+            if (mEAPTypeSelected != 2)
+                mBind.llCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
+            else
+                mBind.llCa.setVisibility(View.VISIBLE);
             mBind.llCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             mBind.llKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
         });
@@ -319,8 +347,12 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
         String ssid = mBind.etSsid.getText().toString();
         if (TextUtils.isEmpty(ssid))
             return false;
-        if (mSecuritySelected != 0)
+        if (mSecuritySelected != 0) {
+            if (mEAPTypeSelected != 2 && !mBind.cbVerifyServer.isChecked()) {
+                return true;
+            }
             return !TextUtils.isEmpty(mCaPath);
+        }
         return true;
     }
 
@@ -333,7 +365,6 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
             showLoadingProgressDialog();
             List<OrderTask> orderTasks = new ArrayList<>();
             orderTasks.add(OrderTaskAssembler.setWifiSecurityType(mSecuritySelected));
-            orderTasks.add(OrderTaskAssembler.setWifiEapType(mEAPTypeSelected));
             if (mSecuritySelected == 0) {
                 orderTasks.add(OrderTaskAssembler.setWifiSSID(ssid));
                 orderTasks.add(OrderTaskAssembler.setWifiPassword(password));
@@ -343,18 +374,21 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                     orderTasks.add(OrderTaskAssembler.setWifiEapUsername(username));
                     orderTasks.add(OrderTaskAssembler.setWifiEapPassword(password));
                     orderTasks.add(OrderTaskAssembler.setWifiEapVerifyServiceEnable(mBind.cbVerifyServer.isChecked() ? 1 : 0));
+                    if (mBind.cbVerifyServer.isChecked())
+                        orderTasks.add(OrderTaskAssembler.setWifiCA(new File(mCaPath)));
                 } else {
-                    orderTasks.add(OrderTaskAssembler.setWifiSSID(ssid));
                     orderTasks.add(OrderTaskAssembler.setWifiSSID(ssid));
                     orderTasks.add(OrderTaskAssembler.setWifiEapDomainId(domainId));
                     orderTasks.add(OrderTaskAssembler.getWifiEapVerifyServiceEnable());
+                    orderTasks.add(OrderTaskAssembler.setWifiCA(new File(mCaPath)));
+                    if (!TextUtils.isEmpty(mCertPath))
+                        orderTasks.add(OrderTaskAssembler.setWifiClientCert(new File(mCertPath)));
+                    if (!TextUtils.isEmpty(mKeyPath))
+                        orderTasks.add(OrderTaskAssembler.setWifiClientKey(new File(mKeyPath)));
+
                 }
-                if (!TextUtils.isEmpty(mCertPath))
-                    orderTasks.add(OrderTaskAssembler.setWifiClientCert(new File(mCertPath)));
-                if (!TextUtils.isEmpty(mKeyPath))
-                    orderTasks.add(OrderTaskAssembler.setWifiClientKey(new File(mKeyPath)));
-                orderTasks.add(OrderTaskAssembler.setWifiCA(new File(mCaPath)));
             }
+            orderTasks.add(OrderTaskAssembler.setWifiEapType(mEAPTypeSelected));
             MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
         } catch (Exception e) {
             ToastUtils.showToast(this, "File is missing");

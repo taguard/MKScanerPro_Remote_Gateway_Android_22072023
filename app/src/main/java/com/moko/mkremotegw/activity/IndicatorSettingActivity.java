@@ -158,10 +158,6 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             ToastUtils.showToast(this, "Set up failed");

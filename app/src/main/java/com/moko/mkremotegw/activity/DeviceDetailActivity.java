@@ -278,10 +278,6 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         Intent i = new Intent(this, ScannerUploadOptionActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -293,10 +289,6 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
         // 切换扫描开关
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         mScanSwitch = !mScanSwitch;
@@ -319,10 +311,6 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
         // 设置扫描间隔
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
             return;
         }
         mHandler.postDelayed(() -> {

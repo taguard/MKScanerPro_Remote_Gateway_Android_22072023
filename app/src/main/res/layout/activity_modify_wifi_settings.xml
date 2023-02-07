@@ -296,7 +296,7 @@
                     android:id="@+id/et_host"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="Less than 64 Characters"
+                    android:hint="1-64 Characters"
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
                     android:singleLine="true"
@@ -373,7 +373,7 @@
                     android:id="@+id/et_ca_file_path"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="Less than 100 Characters"
+                    android:hint="1-100 Characters"
                     android:maxLength="100"
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
@@ -385,7 +385,7 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.65" />
+                    app:layout_constraintWidth_percent="0.6" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -412,7 +412,7 @@
                     android:id="@+id/et_cert_file_path"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="Less than 100 Characters"
+                    android:hint="1-100 Characters"
                     android:maxLength="100"
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
@@ -424,7 +424,7 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.65" />
+                    app:layout_constraintWidth_percent="0.6" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -451,7 +451,7 @@
                     android:id="@+id/et_key_file_path"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="Less than 100 Characters"
+                    android:hint="1-100 Characters"
                     android:maxLength="100"
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
@@ -463,7 +463,7 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.65" />
+                    app:layout_constraintWidth_percent="0.6" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView

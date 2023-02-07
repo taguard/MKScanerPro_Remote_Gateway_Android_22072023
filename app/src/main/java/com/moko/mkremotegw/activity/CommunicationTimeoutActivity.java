@@ -139,10 +139,6 @@ public class CommunicationTimeoutActivity extends BaseActivity<ActivityCommunica
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         if (TextUtils.isEmpty(timeoutStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;

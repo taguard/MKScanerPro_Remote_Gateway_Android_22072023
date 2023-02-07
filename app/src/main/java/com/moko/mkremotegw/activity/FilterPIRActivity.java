@@ -177,6 +177,22 @@ public class FilterPIRActivity extends BaseActivity<ActivityFilterPirBinding> {
     }
 
     private void saveParams() {
+        String majorMinStr = mBind.etPirMajorMin.getText().toString();
+        String majorMaxStr = mBind.etPirMajorMax.getText().toString();
+        int majorMin = 0;
+        int majorMax = 65535;
+        if (!TextUtils.isEmpty(majorMinStr))
+            majorMin = Integer.parseInt(majorMinStr);
+        if (!TextUtils.isEmpty(majorMaxStr))
+            majorMax = Integer.parseInt(majorMaxStr);
+        String minorMinStr = mBind.etPirMinorMin.getText().toString();
+        String minorMaxStr = mBind.etPirMinorMax.getText().toString();
+        int minorMin = 0;
+        int minorMax = 65535;
+        if (!TextUtils.isEmpty(minorMinStr))
+            minorMin = Integer.parseInt(minorMinStr);
+        if (!TextUtils.isEmpty(minorMaxStr))
+            minorMax = Integer.parseInt(minorMaxStr);
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_PIR;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("switch", mBind.cbPir.isChecked() ? 1 : 0);
@@ -184,10 +200,10 @@ public class FilterPIRActivity extends BaseActivity<ActivityFilterPirBinding> {
         jsonObject.addProperty("door_status", mDoorStatusSelected);
         jsonObject.addProperty("sensor_sensitivity", mSensorSensitivitySelected);
         jsonObject.addProperty("sensor_detection_status", mDetectionStatusSelected);
-        jsonObject.addProperty("min_major", Integer.parseInt(mBind.etPirMajorMin.getText().toString()));
-        jsonObject.addProperty("max_major", Integer.parseInt(mBind.etPirMajorMax.getText().toString()));
-        jsonObject.addProperty("min_minor", Integer.parseInt(mBind.etPirMinorMin.getText().toString()));
-        jsonObject.addProperty("max_minor", Integer.parseInt(mBind.etPirMinorMax.getText().toString()));
+        jsonObject.addProperty("min_major", majorMin);
+        jsonObject.addProperty("max_major", majorMax);
+        jsonObject.addProperty("min_minor", minorMin);
+        jsonObject.addProperty("max_minor", minorMax);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
@@ -203,37 +219,42 @@ public class FilterPIRActivity extends BaseActivity<ActivityFilterPirBinding> {
         final String minorMax = mBind.etPirMinorMax.getText().toString();
         if (!TextUtils.isEmpty(majorMin) && !TextUtils.isEmpty(majorMax)) {
             if (Integer.parseInt(majorMin) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Major Error");
                 return false;
             }
             if (Integer.parseInt(majorMax) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Major Error");
                 return false;
             }
             if (Integer.parseInt(majorMax) < Integer.parseInt(majorMin)) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Major Error");
                 return false;
             }
-        } else if (TextUtils.isEmpty(majorMin) || TextUtils.isEmpty(majorMax)) {
-            ToastUtils.showToast(this, "Para Error");
+        } else if (!TextUtils.isEmpty(majorMin) && TextUtils.isEmpty(majorMax)) {
+            ToastUtils.showToast(this, "Major Error");
+            return false;
+        } else if (TextUtils.isEmpty(majorMin) && !TextUtils.isEmpty(majorMax)) {
+            ToastUtils.showToast(this, "Major Error");
             return false;
         }
-
         if (!TextUtils.isEmpty(minorMin) && !TextUtils.isEmpty(minorMax)) {
             if (Integer.parseInt(minorMin) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Minor Error");
                 return false;
             }
             if (Integer.parseInt(minorMax) > 65535) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Minor Error");
                 return false;
             }
             if (Integer.parseInt(minorMax) < Integer.parseInt(minorMin)) {
-                ToastUtils.showToast(this, "Para Error");
+                ToastUtils.showToast(this, "Minor Error");
                 return false;
             }
-        } else if (TextUtils.isEmpty(minorMin) || TextUtils.isEmpty(minorMax)) {
-            ToastUtils.showToast(this, "Para Error");
+        } else if (!TextUtils.isEmpty(minorMin) && TextUtils.isEmpty(minorMax)) {
+            ToastUtils.showToast(this, "Minor Error");
+            return false;
+        } else if (TextUtils.isEmpty(minorMin) && !TextUtils.isEmpty(minorMax)) {
+            ToastUtils.showToast(this, "Minor Error");
             return false;
         }
         return true;

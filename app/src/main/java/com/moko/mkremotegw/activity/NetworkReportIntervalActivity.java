@@ -138,10 +138,6 @@ public class NetworkReportIntervalActivity extends BaseActivity<ActivityNetworkR
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!mMokoDevice.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         if (TextUtils.isEmpty(intervalStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;

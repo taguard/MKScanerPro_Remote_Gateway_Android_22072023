@@ -122,7 +122,7 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                 int index = 0;
                 for (JsonElement jsonElement : ruleList) {
                     filterOther.add(jsonElement.getAsJsonObject());
-                    View v = LayoutInflater.from(FilterOtherActivity.this).inflate(R.layout.item_other_filter, mBind.llFilterCondition, false);
+                    View v = LayoutInflater.from(FilterOtherActivity.this).inflate(R.layout.item_other_filter_remote, mBind.llFilterCondition, false);
                     TextView tvCondition = v.findViewById(R.id.tv_condition);
                     EditText etDataType = v.findViewById(R.id.et_data_type);
                     EditText etMin = v.findViewById(R.id.et_min);
@@ -135,9 +135,13 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                     } else {
                         tvCondition.setText("Condition C");
                     }
-                    etDataType.setText(jsonElement.getAsJsonObject().get("type").getAsString());
-                    etMin.setText(String.valueOf(jsonElement.getAsJsonObject().get("start").getAsInt()));
-                    etMax.setText(String.valueOf(jsonElement.getAsJsonObject().get("end").getAsInt()));
+                    String dataTypeStr = jsonElement.getAsJsonObject().get("type").getAsString();
+                    int dataType = Integer.parseInt(dataTypeStr,16);
+                    int start = jsonElement.getAsJsonObject().get("start").getAsInt();
+                    int end = jsonElement.getAsJsonObject().get("end").getAsInt();
+                    etDataType.setText(dataType == 0 ? "" : dataTypeStr);
+                    etMin.setText(String.valueOf(start == 0 ? "" : start));
+                    etMax.setText(String.valueOf(end == 0 ? "" : end));
                     etRawData.setText(jsonElement.getAsJsonObject().get("raw_data").getAsString());
                     mBind.llFilterCondition.addView(v);
                     index++;
@@ -208,7 +212,7 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
             ToastUtils.showToast(this, "You can set up to 3 filters!");
             return;
         }
-        View v = LayoutInflater.from(this).inflate(R.layout.item_other_filter, mBind.llFilterCondition, false);
+        View v = LayoutInflater.from(this).inflate(R.layout.item_other_filter_remote, mBind.llFilterCondition, false);
         TextView tvCondition = v.findViewById(R.id.tv_condition);
         if (count == 0) {
             tvCondition.setText("Condition A");
@@ -278,6 +282,7 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_OTHER;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("switch", mBind.cbOther.isChecked() ? 1 : 0);
+        jsonObject.addProperty("relation", 0);
         if (filterOther.size() == 1) {
             jsonObject.addProperty("relation", 0);
         }
@@ -315,15 +320,12 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                 final String minStr = etMin.getText().toString();
                 final String maxStr = etMax.getText().toString();
                 final String rawDataStr = etRawData.getText().toString();
-
-                if (TextUtils.isEmpty(dataTypeStr)) {
-                    ToastUtils.showToast(this, "Para Error");
-                    return false;
+                int dataType = 0;
+                if (!TextUtils.isEmpty(dataTypeStr)) {
+                    dataType = Integer.parseInt(dataTypeStr, 16);
+                    if (dataType < 0 || dataType > 0xFF)
+                        return false;
                 }
-                final int dataType = Integer.parseInt(dataTypeStr, 16);
-//                final DataTypeEnum dataTypeEnum = DataTypeEnum.fromDataType(dataType);
-                if (dataType < 0 || dataType > 0xFF)
-                    return false;
                 if (TextUtils.isEmpty(rawDataStr)) {
                     ToastUtils.showToast(this, "Para Error");
                     return false;
@@ -334,22 +336,20 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                     return false;
                 }
                 int min = 0;
-                if (!TextUtils.isEmpty(minStr))
+                if (!TextUtils.isEmpty(minStr)) {
                     min = Integer.parseInt(minStr);
+                    if (min < 1 || min > 29) {
+                        ToastUtils.showToast(this, "Range Error");
+                        return false;
+                    }
+                }
                 int max = 0;
-                if (!TextUtils.isEmpty(maxStr))
+                if (!TextUtils.isEmpty(maxStr)) {
                     max = Integer.parseInt(maxStr);
-                if (min == 0 && max != 0) {
-                    ToastUtils.showToast(this, "Para Error");
-                    return false;
-                }
-                if (min > 29) {
-                    ToastUtils.showToast(this, "Range Error");
-                    return false;
-                }
-                if (max > 29) {
-                    ToastUtils.showToast(this, "Range Error");
-                    return false;
+                    if (max < 1 || max > 29) {
+                        ToastUtils.showToast(this, "Range Error");
+                        return false;
+                    }
                 }
                 if (max < min) {
                     ToastUtils.showToast(this, "Para Error");
@@ -366,7 +366,7 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                 jsonObject.addProperty("type", String.format("%02x", dataType));
                 jsonObject.addProperty("start", min);
                 jsonObject.addProperty("end", max);
-                jsonObject.addProperty("data", rawDataStr);
+                jsonObject.addProperty("raw_data", rawDataStr);
                 filterOther.add(jsonObject);
             }
         } else {
