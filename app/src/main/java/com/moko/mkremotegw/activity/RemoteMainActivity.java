@@ -377,7 +377,8 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
         // 收到任何信息都认为在线，除了遗愿信息
         if (msg_id != MQTTConstants.NOTIFY_MSG_ID_NETWORKING_STATUS
                 && msg_id != MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT
-                && msg_id != MQTTConstants.NOTIFY_MSG_ID_OFFLINE)
+                && msg_id != MQTTConstants.NOTIFY_MSG_ID_OFFLINE
+                && msg_id != MQTTConstants.NOTIFY_MSG_ID_BUTTON_RESET)
             return;
         if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT && isDurationVoid())
             return;
@@ -387,8 +388,9 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
         final String mac = msgNotify.device_info.mac;
         for (final MokoDevice device : devices) {
             if (device.mac.equals(mac)) {
-                if (msg_id == MQTTConstants.NOTIFY_MSG_ID_OFFLINE && device.isOnline) {
-                    // 收到遗愿信息，设备离线
+                if ((msg_id == MQTTConstants.NOTIFY_MSG_ID_OFFLINE
+                        || msg_id == MQTTConstants.NOTIFY_MSG_ID_BUTTON_RESET) && device.isOnline) {
+                    // 收到遗愿信息或者按键重置，设备离线
                     device.isOnline = false;
                     if (mHandler.hasMessages(device.id)) {
                         mHandler.removeMessages(device.id);

@@ -162,11 +162,11 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
                 // 当前连接的设备有值
                 BleConnectedList.BleDevice bleDevice = result.data.ble_conn_list.get(0);
                 // 根据类型请求不同数据
-                if (bleDevice.type == 0) {
-                    readOtherInfo(bleDevice.mac);
-                } else {
+                if (bleDevice.type == 1) {
                     mConnectedBXPButtonInfo = new BXPButtonInfo();
                     readBXPButtonInfo(bleDevice.mac);
+                } else {
+                    readOtherInfo(bleDevice.mac);
                 }
             } else {
                 Intent intent = new Intent(this, BleManagerActivity.class);

@@ -80,6 +80,7 @@ public class MQTTConstants {
     // NOTIFY
     public static final int NOTIFY_MSG_ID_NETWORKING_STATUS = 3004;
     public static final int NOTIFY_MSG_ID_OTA_RESULT = 3007;
+    public static final int NOTIFY_MSG_ID_BUTTON_RESET = 3014;
     public static final int NOTIFY_MSG_ID_WIFI_CERT_RESULT = 3022;
     public static final int NOTIFY_MSG_ID_MQTT_CERT_RESULT = 3032;
     public static final int NOTIFY_MSG_ID_BLE_SCAN_RESULT = 3070;

@@ -347,7 +347,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("security_type", sslFragment.getConnectMode());
         jsonObject.addProperty("host", mBind.etMqttHost.getText().toString());
-        jsonObject.addProperty("port", Integer.parseInt(mBind.etMqttHost.getText().toString()));
+        jsonObject.addProperty("port", Integer.parseInt(mBind.etMqttPort.getText().toString()));
         jsonObject.addProperty("client_id", mBind.etMqttClientId.getText().toString());
         jsonObject.addProperty("username", userFragment.getUsername());
         jsonObject.addProperty("passwd", userFragment.getPassword());

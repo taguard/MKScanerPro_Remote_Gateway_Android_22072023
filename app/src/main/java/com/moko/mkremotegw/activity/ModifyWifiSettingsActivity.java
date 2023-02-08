@@ -180,7 +180,8 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
                 ToastUtils.showToast(this, "Set up succeed");
-                if (mSecuritySelected != 0) {
+                if (mSecuritySelected != 0 &&
+                        (mEAPTypeSelected == 2 || (mEAPTypeSelected != 0 && mBind.cbVerifyServer.isChecked()))) {
                     XLog.i("升级Wifi证书");
                     mHandler.postDelayed(() -> {
                         dismissLoadingProgressDialog();
@@ -233,9 +234,7 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
         jsonObject.addProperty("eap_id", mEAPTypeSelected == 2 ? domainId : "");
         jsonObject.addProperty("eap_username", mSecuritySelected != 0 ? username : "");
         jsonObject.addProperty("eap_passwd", mSecuritySelected != 0 ? password : "");
-        if (mSecuritySelected != 0 && mEAPTypeSelected != 2) {
-            jsonObject.addProperty("eap_verify_server", mBind.cbVerifyServer.isChecked() ? 1 : 0);
-        }
+        jsonObject.addProperty("eap_verify_server", mBind.cbVerifyServer.isChecked() ? 1 : 0);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
@@ -306,7 +305,7 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                 mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
-                mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE: View.GONE);
+                mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             }
