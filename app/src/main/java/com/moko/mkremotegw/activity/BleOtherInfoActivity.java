@@ -17,6 +17,7 @@ import com.moko.mkremotegw.adapter.BleCharacteristicsAdapter;
 import com.moko.mkremotegw.base.BaseActivity;
 import com.moko.mkremotegw.databinding.ActivityOtherInfoBinding;
 import com.moko.mkremotegw.db.DBTools;
+import com.moko.mkremotegw.dialog.AlertMessageDialog;
 import com.moko.mkremotegw.dialog.CharWriteDialog;
 import com.moko.mkremotegw.entity.BleOtherChar;
 import com.moko.mkremotegw.entity.MQTTConfig;
@@ -250,12 +251,18 @@ public class BleOtherInfoActivity extends BaseActivity<ActivityOtherInfoBinding>
 
     public void onDisconnect(View view) {
         if (isWindowLocked()) return;
-        mHandler.postDelayed(() -> {
-            dismissLoadingProgressDialog();
-            ToastUtils.showToast(this, "Setup failed");
-        }, 30 * 1000);
-        showLoadingProgressDialog();
-        disconnectDevice();
+        AlertMessageDialog dialog = new AlertMessageDialog();
+        dialog.setMessage("Please confirm again whether to disconnect the gateway from BLE devices?");
+        dialog.setOnAlertConfirmListener(() -> {
+            if (isWindowLocked()) return;
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                ToastUtils.showToast(BleOtherInfoActivity.this, "Setup failed");
+            }, 30 * 1000);
+            showLoadingProgressDialog();
+            disconnectDevice();
+        });
+        dialog.show(getSupportFragmentManager());
     }
 
     private void disconnectDevice() {

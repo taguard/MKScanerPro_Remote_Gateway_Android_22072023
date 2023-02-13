@@ -41,9 +41,10 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 
@@ -55,8 +56,9 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
 
     private BleDeviceAdapter mAdapter;
     private ArrayList<BleDevice> mBleDevices;
-    private LinkedHashMap<String, BleDevice> mBleDevicesMap;
+    private ConcurrentHashMap<String, BleDevice> mBleDevicesMap;
     private Handler mHandler;
+    private int mIndex;
 
     @Override
     protected void onCreate() {
@@ -68,7 +70,7 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
 
         mBind.tvDeviceName.setText(mMokoDevice.name);
         mBleDevices = new ArrayList<>();
-        mBleDevicesMap = new LinkedHashMap<>();
+        mBleDevicesMap = new ConcurrentHashMap<>();
         mAdapter = new BleDeviceAdapter();
         mAdapter.openLoadAnimation();
         mAdapter.replaceData(mBleDevices);
@@ -125,6 +127,10 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
                     return;
                 List<BleDevice> bleDevices = result.data;
                 for (BleDevice device : bleDevices) {
+                    if (device.rssi < filterRssi)
+                        continue;
+                    if (!mBleDevicesMap.containsKey(device.mac))
+                        device.index = mIndex++;
                     mBleDevicesMap.put(device.mac, device);
                 }
             });
@@ -229,6 +235,15 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
         } else {
             mBleDevices.addAll(mBleDevicesMap.values());
         }
+        System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+        Collections.sort(mBleDevices, (lhs, rhs) -> {
+            if (lhs.index > rhs.index) {
+                return 1;
+            } else if (lhs.index < rhs.index) {
+                return -1;
+            }
+            return 0;
+        });
     }
 
     public void onFilter(View view) {
@@ -266,6 +281,7 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
                 mBind.tvEditFilter.setVisibility(View.VISIBLE);
             }
             mBleDevicesMap.clear();
+            mIndex = 0;
         });
         scanFilterDialog.show(getSupportFragmentManager());
     }
@@ -279,6 +295,7 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
         filterMac = "";
         filterRssi = -127;
         mBleDevicesMap.clear();
+        mIndex = 0;
     }
 
     @Override
@@ -309,7 +326,7 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 ToastUtils.showToast(this, "Setup failed");
-            }, 30 * 1000);
+            }, 50 * 1000);
             showLoadingProgressDialog();
             getBleDeviceInfo(bleDevice);
         }

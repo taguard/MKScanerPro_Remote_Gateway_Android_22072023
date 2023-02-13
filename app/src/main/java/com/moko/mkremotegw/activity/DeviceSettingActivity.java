@@ -57,16 +57,8 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
     private Handler mHandler;
     private InputFilter filter;
 
-    private ArrayList<String> mValues;
-    private int mSelected;
-    private int mCurrentSelected;
-
     @Override
     protected void onCreate() {
-        mValues = new ArrayList<>();
-        mValues.add("Disable");
-        mValues.add("Long press in 1 minute after powered");
-        mValues.add("Long press any time");
         filter = (source, start, end, dest, dstart, dend) -> {
             if (!(source + "").matches(FILTER_ASCII)) {
                 return "";
@@ -79,12 +71,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
         mHandler = new Handler(Looper.getMainLooper());
-        mHandler.postDelayed(() -> {
-            dismissLoadingProgressDialog();
-            ToastUtils.showToast(this, "Set up failed");
-        }, 30 * 1000);
-        showLoadingProgressDialog();
-        getButtonReset();
     }
 
     @Override
@@ -107,34 +93,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         } catch (Exception e) {
             e.printStackTrace();
             return;
-        }
-        if (msg_id == MQTTConstants.READ_MSG_ID_BUTTON_RESET) {
-            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
-            }.getType();
-            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
-                return;
-            dismissLoadingProgressDialog();
-            mHandler.removeMessages(0);
-            JsonObject data = result.data;
-            mSelected = data.get("key_reset_type").getAsInt();
-            mBind.tvButtonReset.setText(mValues.get(mSelected));
-        }
-        if (msg_id == MQTTConstants.CONFIG_MSG_ID_BUTTON_RESET) {
-            Type type = new TypeToken<MsgConfigResult>() {
-            }.getType();
-            MsgConfigResult result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
-                return;
-            dismissLoadingProgressDialog();
-            mHandler.removeMessages(0);
-            if (result.result_code == 0) {
-                mSelected = mCurrentSelected;
-                mBind.tvButtonReset.setText(mValues.get(mSelected));
-                ToastUtils.showToast(this, "Set up succeed");
-            } else {
-                ToastUtils.showToast(this, "Set up failed");
-            }
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_REBOOT) {
             Type type = new TypeToken<MsgConfigResult>() {
@@ -311,19 +269,15 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
     }
 
     public void onButtonReset(View view) {
-        if (isWindowLocked()) return;
-        BottomDialog dialog = new BottomDialog();
-        dialog.setDatas(mValues, mSelected);
-        dialog.setListener(value -> {
-            mCurrentSelected = value;
-            mHandler.postDelayed(() -> {
-                dismissLoadingProgressDialog();
-                ToastUtils.showToast(this, "Set up failed");
-            }, 30 * 1000);
-            showLoadingProgressDialog();
-            setButtonReset(value);
-        });
-        dialog.show(getSupportFragmentManager());
+        if (isWindowLocked())
+            return;
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
+            return;
+        }
+        Intent i = new Intent(this, ButtonResetActivity.class);
+        i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
+        startActivity(i);
     }
 
     public void onOTA(View view) {
@@ -423,28 +377,6 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         int msgId = MQTTConstants.CONFIG_MSG_ID_RESET;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("factory_reset", 0);
-        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
-        try {
-            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void getButtonReset() {
-        int msgId = MQTTConstants.READ_MSG_ID_BUTTON_RESET;
-        String message = assembleReadCommon(msgId, mMokoDevice.mac);
-        try {
-            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void setButtonReset(int value) {
-        int msgId = MQTTConstants.CONFIG_MSG_ID_BUTTON_RESET;
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("key_reset_type", value);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);

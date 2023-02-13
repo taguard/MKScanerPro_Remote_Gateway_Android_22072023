@@ -181,7 +181,7 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             if (result.result_code == 0) {
                 ToastUtils.showToast(this, "Set up succeed");
                 if (mSecuritySelected != 0 &&
-                        (mEAPTypeSelected == 2 || (mEAPTypeSelected != 0 && mBind.cbVerifyServer.isChecked()))) {
+                        (mEAPTypeSelected == 2 || mBind.cbVerifyServer.isChecked())) {
                     XLog.i("升级Wifi证书");
                     mHandler.postDelayed(() -> {
                         dismissLoadingProgressDialog();

@@ -8,6 +8,7 @@ public class BleDevice implements Serializable {
     public String adv_name;
     public String mac;
     public int rssi;
+    public int index;
     //0：ibeacon
     //1：eddystone-uid
     //2：eddystone-url

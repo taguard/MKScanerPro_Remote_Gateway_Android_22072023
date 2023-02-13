@@ -84,7 +84,7 @@ public class ScanFilterDialog extends MokoBaseDialog<DialogScanFilterBinding> {
 
     @Override
     public boolean getCancelOutside() {
-        return false;
+        return true;
     }
 
     @Override

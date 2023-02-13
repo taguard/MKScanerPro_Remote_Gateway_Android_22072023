@@ -14,6 +14,7 @@ import com.moko.mkremotegw.AppConstants;
 import com.moko.mkremotegw.base.BaseActivity;
 import com.moko.mkremotegw.databinding.ActivityBxpButtonInfoBinding;
 import com.moko.mkremotegw.db.DBTools;
+import com.moko.mkremotegw.dialog.AlertMessageDialog;
 import com.moko.mkremotegw.entity.MQTTConfig;
 import com.moko.mkremotegw.entity.MokoDevice;
 import com.moko.mkremotegw.utils.SPUtiles;
@@ -58,8 +59,26 @@ public class BXPButtonInfoActivity extends BaseActivity<ActivityBxpButtonInfoBin
         mBind.tvDeviceSoftwareVersion.setText(mBXPButtonInfo.software_version);
         mBind.tvDeviceMac.setText(mBXPButtonInfo.mac);
         mBind.tvBatteryVoltage.setText(String.format("%dmV", mBXPButtonInfo.battery_v));
-        mBind.tvTriggerCount.setText(String.valueOf(mBXPButtonInfo.alarm_num));
-        mBind.tvAlarmStatus.setText(mBXPButtonInfo.alarm_status == 0 ? "Standby" : "Triggered");
+        mBind.tvSinglePressCount.setText(String.valueOf(mBXPButtonInfo.single_alarm_num));
+        mBind.tvDoublePressCount.setText(String.valueOf(mBXPButtonInfo.double_alarm_num));
+        mBind.tvLongPressCount.setText(String.valueOf(mBXPButtonInfo.long_alarm_num));
+        String alarmStatusStr = "";
+        if (mBXPButtonInfo.alarm_status == 0) {
+            alarmStatusStr = "Not triggered";
+        } else {
+            StringBuilder modeStr = new StringBuilder();
+            if ((mBXPButtonInfo.alarm_status & 0x01) == 0x01)
+                modeStr.append("1&");
+            if ((mBXPButtonInfo.alarm_status & 0x02) == 0x02)
+                modeStr.append("2&");
+            if ((mBXPButtonInfo.alarm_status & 0x04) == 0x04)
+                modeStr.append("3&");
+            if ((mBXPButtonInfo.alarm_status & 0x08) == 0x08)
+                modeStr.append("4&");
+            String mode = modeStr.substring(0, modeStr.length() - 1);
+            alarmStatusStr = String.format("Mode %s triggered", mode);
+        }
+        mBind.tvAlarmStatus.setText(alarmStatusStr);
     }
 
     @Override
@@ -98,8 +117,26 @@ public class BXPButtonInfoActivity extends BaseActivity<ActivityBxpButtonInfoBin
             }
             ToastUtils.showToast(this, "Setup succeed!");
             mBind.tvBatteryVoltage.setText(String.format("%dmV", bxpButtonInfo.battery_v));
-            mBind.tvTriggerCount.setText(String.valueOf(bxpButtonInfo.alarm_num));
-            mBind.tvAlarmStatus.setText(bxpButtonInfo.alarm_status == 0 ? "Standby" : "Triggered");
+            mBind.tvSinglePressCount.setText(String.valueOf(bxpButtonInfo.single_alarm_num));
+            mBind.tvDoublePressCount.setText(String.valueOf(bxpButtonInfo.double_alarm_num));
+            mBind.tvLongPressCount.setText(String.valueOf(bxpButtonInfo.long_alarm_num));
+            String alarmStatusStr = "";
+            if (bxpButtonInfo.alarm_status == 0) {
+                alarmStatusStr = "Not triggered";
+            } else {
+                StringBuilder modeStr = new StringBuilder();
+                if ((bxpButtonInfo.alarm_status & 0x01) == 0x01)
+                    modeStr.append("1&");
+                if ((bxpButtonInfo.alarm_status & 0x02) == 0x02)
+                    modeStr.append("2&");
+                if ((bxpButtonInfo.alarm_status & 0x04) == 0x04)
+                    modeStr.append("3&");
+                if ((bxpButtonInfo.alarm_status & 0x08) == 0x08)
+                    modeStr.append("4&");
+                String mode = modeStr.substring(0, modeStr.length() - 1);
+                alarmStatusStr = String.format("Mode %s triggered", mode);
+            }
+            mBind.tvAlarmStatus.setText(alarmStatusStr);
         }
         if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_BXP_BUTTON_DISMISS_ALARM) {
             dismissLoadingProgressDialog();
@@ -179,12 +216,18 @@ public class BXPButtonInfoActivity extends BaseActivity<ActivityBxpButtonInfoBin
 
     public void onDisconnect(View view) {
         if (isWindowLocked()) return;
-        mHandler.postDelayed(() -> {
-            dismissLoadingProgressDialog();
-            ToastUtils.showToast(this, "Setup failed");
-        }, 30 * 1000);
-        showLoadingProgressDialog();
-        disconnectDevice();
+        AlertMessageDialog dialog = new AlertMessageDialog();
+        dialog.setMessage("Please confirm again whether to disconnect the gateway from BLE devices?");
+        dialog.setOnAlertConfirmListener(() -> {
+            if (isWindowLocked()) return;
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                ToastUtils.showToast(BXPButtonInfoActivity.this, "Setup failed");
+            }, 30 * 1000);
+            showLoadingProgressDialog();
+            disconnectDevice();
+        });
+        dialog.show(getSupportFragmentManager());
     }
 
     private void disconnectDevice() {

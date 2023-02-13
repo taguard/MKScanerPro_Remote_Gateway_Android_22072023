@@ -87,6 +87,8 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
 
     private void changeView() {
         mBind.ivScanSwitch.setImageResource(mScanSwitch ? R.drawable.checkbox_open : R.drawable.checkbox_close);
+        mBind.tvScanDeviceTotal.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
+        mBind.tvScanDeviceTotal.setText(getString(R.string.scan_device_total, mScanDevices.size()));
         mBind.tvManageDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
         mBind.rvDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
     }
@@ -134,6 +136,7 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
             for (JsonObject jsonObject : result.data) {
                 mScanDevices.add(0, jsonObject.toString());
             }
+            mBind.tvScanDeviceTotal.setText(getString(R.string.scan_device_total, mScanDevices.size()));
             mAdapter.replaceData(mScanDevices);
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_SCAN_CONFIG) {
@@ -209,7 +212,9 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
                 return;
             }
             mConnectedBXPButtonInfo.battery_v = bxpButtonInfo.battery_v;
-            mConnectedBXPButtonInfo.alarm_num = bxpButtonInfo.alarm_num;
+            mConnectedBXPButtonInfo.single_alarm_num = bxpButtonInfo.single_alarm_num;
+            mConnectedBXPButtonInfo.double_alarm_num = bxpButtonInfo.double_alarm_num;
+            mConnectedBXPButtonInfo.long_alarm_num = bxpButtonInfo.long_alarm_num;
             mConnectedBXPButtonInfo.alarm_status = bxpButtonInfo.alarm_status;
             ToastUtils.showToast(this, "Setup succeed");
             Intent intent = new Intent(this, BXPButtonInfoActivity.class);
@@ -298,6 +303,8 @@ public class DeviceDetailActivity extends BaseActivity<ActivityDetailRemoteBindi
         mScanSwitch = !mScanSwitch;
         mBind.ivScanSwitch.setImageResource(mScanSwitch ? R.drawable.checkbox_open : R.drawable.checkbox_close);
         mBind.tvManageDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
+        mBind.tvScanDeviceTotal.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
+        mBind.tvScanDeviceTotal.setText(getString(R.string.scan_device_total, 0));
         mBind.rvDevices.setVisibility(mScanSwitch ? View.VISIBLE : View.GONE);
         mScanDevices.clear();
         mAdapter.replaceData(mScanDevices);
