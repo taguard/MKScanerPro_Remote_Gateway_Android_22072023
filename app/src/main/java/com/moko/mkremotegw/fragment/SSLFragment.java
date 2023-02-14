@@ -72,13 +72,7 @@ public class SSLFragment extends Fragment {
                 if (!isChecked) {
                     connectMode = 0;
                 } else {
-                    if (selected == 0) {
-                        connectMode = 1;
-                    } else if (selected == 1) {
-                        connectMode = 2;
-                    } else if (selected == 2) {
-                        connectMode = 3;
-                    }
+                    connectMode = selected + 1;
                 }
                 mBind.clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             }
@@ -133,7 +127,6 @@ public class SSLFragment extends Fragment {
         if (mBind == null)
             return;
         mBind.clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
-        mBind.cbSsl.setChecked(connectMode > 0);
         if (connectMode > 0) {
             selected = connectMode - 1;
             mBind.tvCertification.setText(values.get(selected));
@@ -151,6 +144,7 @@ public class SSLFragment extends Fragment {
                 mBind.llClientCert.setVisibility(View.VISIBLE);
             }
         }
+        mBind.cbSsl.setChecked(connectMode > 0);
     }
 
     public void setCAPath(String caPath) {
@@ -179,7 +173,7 @@ public class SSLFragment extends Fragment {
         dialog.setDatas(values, selected);
         dialog.setListener(value -> {
             selected = value;
-            mBind. tvCertification.setText(values.get(selected));
+            mBind.tvCertification.setText(values.get(selected));
             if (selected == 0) {
                 connectMode = 1;
                 mBind.llCa.setVisibility(View.GONE);

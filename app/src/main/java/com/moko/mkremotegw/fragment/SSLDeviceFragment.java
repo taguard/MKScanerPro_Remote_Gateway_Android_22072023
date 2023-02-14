@@ -73,13 +73,7 @@ public class SSLDeviceFragment extends Fragment {
                 if (!isChecked) {
                     mConnectMode = 0;
                 } else {
-                    if (selected == 0) {
-                        mConnectMode = 1;
-                    } else if (selected == 1) {
-                        mConnectMode = 2;
-                    } else if (selected == 2) {
-                        mConnectMode = 3;
-                    }
+                    mConnectMode = selected + 1;
                 }
                 mBind.clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             }
@@ -134,24 +128,6 @@ public class SSLDeviceFragment extends Fragment {
         if (mBind == null)
             return;
         mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
-        mBind.cbSsl.setChecked(mConnectMode > 0);
-        mBind.cbSsl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (!isChecked) {
-                    mConnectMode = 0;
-                } else {
-                    if (selected == 0) {
-                        mConnectMode = 1;
-                    } else if (selected == 1) {
-                        mConnectMode = 2;
-                    } else if (selected == 2) {
-                        mConnectMode = 3;
-                    }
-                }
-                mBind.clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-            }
-        });
         if (mConnectMode > 0) {
             selected = mConnectMode - 1;
             mBind.tvCaFile.setText(caPath);
@@ -159,6 +135,7 @@ public class SSLDeviceFragment extends Fragment {
             mBind.tvClientCertFile.setText(clientCertPath);
             mBind.tvCertification.setText(values.get(selected));
         }
+        mBind.cbSsl.setChecked(mConnectMode > 0);
         if (selected == 0) {
             mBind.llCa.setVisibility(View.GONE);
             mBind.llClientKey.setVisibility(View.GONE);
