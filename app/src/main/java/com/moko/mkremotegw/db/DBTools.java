@@ -34,6 +34,8 @@ public class DBTools {
         cv.put(DBConstants.DEVICE_FIELD_MAC, mokoDevice.mac);
         cv.put(DBConstants.DEVICE_FIELD_MQTT_INFO, mokoDevice.mqttInfo);
         cv.put(DBConstants.DEVICE_FIELD_DEVICE_TYPE, mokoDevice.deviceType);
+        cv.put(DBConstants.DEVICE_FIELD_LWT_ENABLE, mokoDevice.lwtEnable);
+        cv.put(DBConstants.DEVICE_FIELD_LWT_TOPIC, mokoDevice.lwtTopic);
         cv.put(DBConstants.DEVICE_FIELD_TOPIC_PUBLISH, mokoDevice.topicPublish);
         cv.put(DBConstants.DEVICE_FIELD_TOPIC_SUBSCRIBE, mokoDevice.topicSubscribe);
         long row = db.insert(DBConstants.TABLE_NAME_DEVICE, null, cv);
@@ -57,6 +59,10 @@ public class DBTools {
                     .getColumnIndex(DBConstants.DEVICE_FIELD_MQTT_INFO));
             mokoDevice.deviceType = cursor.getInt(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_DEVICE_TYPE));
+            mokoDevice.lwtEnable = cursor.getInt(cursor
+                    .getColumnIndex(DBConstants.DEVICE_FIELD_LWT_ENABLE));
+            mokoDevice.lwtTopic = cursor.getString(cursor
+                    .getColumnIndex(DBConstants.DEVICE_FIELD_LWT_TOPIC));
             mokoDevice.topicPublish = cursor.getString(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_TOPIC_PUBLISH));
             mokoDevice.topicSubscribe = cursor.getString(cursor
@@ -82,6 +88,10 @@ public class DBTools {
                     .getColumnIndex(DBConstants.DEVICE_FIELD_MQTT_INFO));
             mokoDevice.deviceType = cursor.getInt(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_DEVICE_TYPE));
+            mokoDevice.lwtEnable = cursor.getInt(cursor
+                    .getColumnIndex(DBConstants.DEVICE_FIELD_LWT_ENABLE));
+            mokoDevice.lwtTopic = cursor.getString(cursor
+                    .getColumnIndex(DBConstants.DEVICE_FIELD_LWT_TOPIC));
             mokoDevice.topicPublish = cursor.getString(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_TOPIC_PUBLISH));
             mokoDevice.topicSubscribe = cursor.getString(cursor
@@ -107,6 +117,10 @@ public class DBTools {
                     .getColumnIndex(DBConstants.DEVICE_FIELD_MQTT_INFO));
             mokoDevice.deviceType = cursor.getInt(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_DEVICE_TYPE));
+            mokoDevice.lwtEnable = cursor.getInt(cursor
+                    .getColumnIndex(DBConstants.DEVICE_FIELD_LWT_ENABLE));
+            mokoDevice.lwtTopic = cursor.getString(cursor
+                    .getColumnIndex(DBConstants.DEVICE_FIELD_LWT_TOPIC));
             mokoDevice.topicPublish = cursor.getString(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_TOPIC_PUBLISH));
             mokoDevice.topicSubscribe = cursor.getString(cursor
@@ -124,6 +138,8 @@ public class DBTools {
         cv.put(DBConstants.DEVICE_FIELD_NAME, mokoDevice.name);
         cv.put(DBConstants.DEVICE_FIELD_MAC, mokoDevice.mac);
         cv.put(DBConstants.DEVICE_FIELD_MQTT_INFO, mokoDevice.mqttInfo);
+        cv.put(DBConstants.DEVICE_FIELD_LWT_ENABLE, mokoDevice.lwtEnable);
+        cv.put(DBConstants.DEVICE_FIELD_LWT_TOPIC, mokoDevice.lwtTopic);
         cv.put(DBConstants.DEVICE_FIELD_TOPIC_PUBLISH, mokoDevice.topicPublish);
         cv.put(DBConstants.DEVICE_FIELD_TOPIC_SUBSCRIBE, mokoDevice.topicSubscribe);
         cv.put(DBConstants.DEVICE_FIELD_DEVICE_TYPE, mokoDevice.deviceType);
@@ -141,12 +157,12 @@ public class DBTools {
     }
 
     // drop table;
-    public void droptable(String tablename) {
+    public void dropTable(String tablename) {
         db.execSQL("DROP TABLE IF EXISTS " + tablename);
     }
 
     // close database;
-    public void close(String databasename) {
+    public void close(String databaseName) {
         db.close();
     }
 

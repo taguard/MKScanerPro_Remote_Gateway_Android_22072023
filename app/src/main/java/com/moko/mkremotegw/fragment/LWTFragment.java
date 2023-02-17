@@ -89,6 +89,8 @@ public class LWTFragment extends Fragment {
     }
 
     public boolean isValid() {
+        if (!mBind.cbLwt.isChecked())
+            return true;
         final String topicStr = mBind.etLwtTopic.getText().toString();
         if (TextUtils.isEmpty(topicStr)) {
             ToastUtils.showToast(getActivity(), "LWT Topic Error");

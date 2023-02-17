@@ -84,8 +84,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
     private String expertFilePath;
     private boolean isFileError;
     private boolean mIsConfigFinish;
-    private String mDeviceSubscribeTopic;
-    private String mDevicePublishTopic;
 
     @Override
     protected void onCreate() {
@@ -248,9 +246,23 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             if (result.result_code == 0) {
                 ToastUtils.showToast(this, "Set up succeed");
                 mIsConfigFinish = true;
-                mDeviceSubscribeTopic = mBind.etMqttSubscribeTopic.getText().toString();
-                mDevicePublishTopic = mBind.etMqttPublishTopic.getText().toString();
-                if (sslFragment.getConnectMode() != 0) {
+                mqttDeviceConfig.connectMode = sslFragment.getConnectMode();
+                mqttDeviceConfig.host = mBind.etMqttHost.getText().toString();
+                mqttDeviceConfig.port = mBind.etMqttPort.getText().toString();
+                mqttDeviceConfig.clientId = mBind.etMqttClientId.getText().toString();
+                mqttDeviceConfig.username = userFragment.getUsername();
+                mqttDeviceConfig.password = userFragment.getPassword();
+                mqttDeviceConfig.topicSubscribe = mBind.etMqttSubscribeTopic.getText().toString();
+                mqttDeviceConfig.topicPublish = mBind.etMqttPublishTopic.getText().toString();
+                mqttDeviceConfig.qos = generalFragment.getQos();
+                mqttDeviceConfig.cleanSession = generalFragment.isCleanSession();
+                mqttDeviceConfig.keepAlive = generalFragment.getKeepAlive();
+                mqttDeviceConfig.lwtEnable = lwtFragment.getLwtEnable();
+                mqttDeviceConfig.lwtQos = lwtFragment.getQos();
+                mqttDeviceConfig.lwtRetain = lwtFragment.getLwtRetain();
+                mqttDeviceConfig.lwtTopic = lwtFragment.getTopic();
+                mqttDeviceConfig.lwtPayload = lwtFragment.getPayload();
+                if (sslFragment.getConnectMode() > 1) {
                     XLog.i("升级Mqtt证书");
                     mHandler.postDelayed(() -> {
                         dismissLoadingProgressDialog();
@@ -297,8 +309,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
     private void back() {
         if (mIsConfigFinish) {
             Intent intent = new Intent();
-            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_SUBSCRIBE_TOPIC, mDeviceSubscribeTopic);
-            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_PUBLISH_TOPIC, mDevicePublishTopic);
+            intent.putExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_DEVICE, mqttDeviceConfig);
             setResult(RESULT_OK, intent);
         }
         finish();

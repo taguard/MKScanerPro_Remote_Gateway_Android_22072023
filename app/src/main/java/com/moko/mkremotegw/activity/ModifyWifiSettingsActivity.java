@@ -145,10 +145,10 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                     mBind.clHost.setVisibility(View.VISIBLE);
                     mBind.clPort.setVisibility(View.VISIBLE);
                 }
+                mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+                mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+                mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             }
-            mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
-            mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
-            mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
             Type type = new TypeToken<MsgNotify<JsonObject>>() {

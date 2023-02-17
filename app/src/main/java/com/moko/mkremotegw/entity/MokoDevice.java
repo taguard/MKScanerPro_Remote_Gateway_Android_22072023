@@ -9,6 +9,8 @@ public class MokoDevice implements Serializable {
     public String name;
     public String mac;
     public String mqttInfo;
+    public int lwtEnable;
+    public String lwtTopic;
     public String topicPublish;
     public String topicSubscribe;
     public boolean isOnline;

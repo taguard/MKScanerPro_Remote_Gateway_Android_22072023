@@ -11,6 +11,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mkremotegw.AppConstants;
+import com.moko.mkremotegw.R;
 import com.moko.mkremotegw.base.BaseActivity;
 import com.moko.mkremotegw.databinding.ActivityBxpButtonInfoBinding;
 import com.moko.mkremotegw.db.DBTools;
@@ -219,7 +220,10 @@ public class BXPButtonInfoActivity extends BaseActivity<ActivityBxpButtonInfoBin
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setMessage("Please confirm again whether to disconnect the gateway from BLE devices?");
         dialog.setOnAlertConfirmListener(() -> {
-            if (isWindowLocked()) return;
+            if (!MQTTSupport.getInstance().isConnected()) {
+                ToastUtils.showToast(this, R.string.network_error);
+                return;
+            }
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 ToastUtils.showToast(BXPButtonInfoActivity.this, "Setup failed");

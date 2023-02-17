@@ -1,6 +1,7 @@
 package com.moko.mkremotegw.activity;
 
 import android.text.InputFilter;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.SeekBar;
 
@@ -34,12 +35,12 @@ public class ScannerFilterActivity extends BaseActivity<ActivityScannerFilterBin
     private boolean mSavedParamsError;
 
     private ArrayList<String> filterMacAddress;
-    private ArrayList<String> filterAdvNameAddress;
+    private ArrayList<String> filterAdvName;
 
     @Override
     protected void onCreate() {
         filterMacAddress = new ArrayList<>();
-        filterAdvNameAddress = new ArrayList<>();
+        filterAdvName = new ArrayList<>();
         filter = (source, start, end, dest, dstart, dend) -> {
             if (!(source + "").matches(FILTER_ASCII)) {
                 return "";
@@ -110,19 +111,20 @@ public class ScannerFilterActivity extends BaseActivity<ActivityScannerFilterBin
                                 }
                             }
                             if (flag == 0x00) {
-                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 3, 5));
+                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 5));
                                 // read
                                 switch (configKeyEnum) {
                                     case KEY_FILTER_NAME_RULES:
                                         if (length > 0) {
+                                            filterAdvName.clear();
                                             byte[] advNameBytes = Arrays.copyOfRange(value, 5, 5 + length);
                                             for (int i = 0, l = advNameBytes.length; i < l; ) {
                                                 int advNameLength = advNameBytes[i] & 0xFF;
                                                 i++;
-                                                filterAdvNameAddress.add(new String(Arrays.copyOfRange(advNameBytes, i, i + advNameLength)));
+                                                filterAdvName.add(new String(Arrays.copyOfRange(advNameBytes, i, i + advNameLength)));
                                                 i += advNameLength;
                                             }
-                                            mBind.etAdvName.setText(filterAdvNameAddress.get(0));
+                                            mBind.etAdvName.setText(filterAdvName.get(0));
                                         }
                                         break;
                                 }
@@ -188,14 +190,34 @@ public class ScannerFilterActivity extends BaseActivity<ActivityScannerFilterBin
 
     public void onSave(View view) {
         if (isWindowLocked()) return;
+        if (isParaError()) return;
         int rssi = mBind.sbRssiFilter.getProgress() - 127;
         showLoadingProgressDialog();
         List<OrderTask> orderTasks = new ArrayList<>();
-        orderTasks.add(OrderTaskAssembler.setFilterNameRules(filterAdvNameAddress));
+        orderTasks.add(OrderTaskAssembler.setFilterNameRules(filterAdvName));
         orderTasks.add(OrderTaskAssembler.setFilterMacRules(filterMacAddress));
         orderTasks.add(OrderTaskAssembler.setFilterRelationship(7));
         orderTasks.add(OrderTaskAssembler.setFilterRSSI(rssi));
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+    }
+
+    private boolean isParaError() {
+        String filerMacStr = mBind.etMacAddress.getText().toString();
+        int length = filerMacStr.length();
+        if (!TextUtils.isEmpty(filerMacStr)) {
+            if (length % 2 != 0) {
+                ToastUtils.showToast(this, "Para Error");
+                return true;
+            }
+            filterMacAddress.clear();
+            filterMacAddress.add(filerMacStr);
+        }
+        String filerNameStr = mBind.etAdvName.getText().toString();
+        if (!TextUtils.isEmpty(filerMacStr)) {
+            filterAdvName.clear();
+            filterAdvName.add(filerNameStr);
+        }
+        return false;
     }
 
     public void onBack(View view) {

@@ -123,6 +123,10 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
                     // 取消订阅
                     try {
                         MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
+                        if (mMokoDevice.lwtEnable == 1
+                                && !TextUtils.isEmpty(mMokoDevice.lwtTopic)
+                                && !mMokoDevice.lwtTopic.equals(mMokoDevice.topicPublish))
+                            MQTTSupport.getInstance().unSubscribe(mMokoDevice.lwtTopic);
                     } catch (MqttException e) {
                         e.printStackTrace();
                     }

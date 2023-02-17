@@ -64,7 +64,8 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
     private ArrayList<MokoDevice> devices;
     private DeviceAdapter adapter;
     public Handler mHandler;
-    public String MQTTAppConfigStr;
+    public String mAppMqttConfigStr;
+    private MQTTConfig mAppMqttConfig;
 
     public static String PATH_LOGCAT;
 
@@ -99,12 +100,13 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
             mBind.rlEmpty.setVisibility(View.GONE);
         }
         mHandler = new Handler(Looper.getMainLooper());
-        MQTTAppConfigStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
-        if (!TextUtils.isEmpty(MQTTAppConfigStr)) {
+        mAppMqttConfigStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        if (!TextUtils.isEmpty(mAppMqttConfigStr)) {
+            mAppMqttConfig = new Gson().fromJson(mAppMqttConfigStr, MQTTConfig.class);
             mBind.tvTitle.setText(getString(R.string.mqtt_connecting));
         }
         try {
-            MQTTSupport.getInstance().connectMqtt(MQTTAppConfigStr);
+            MQTTSupport.getInstance().connectMqtt(mAppMqttConfigStr);
         } catch (FileNotFoundException e) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ToastUtils.showToast(this, "Please select your SSL certificates again, otherwise the APP can't use normally.");
@@ -234,10 +236,23 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
                     MokoDevice mokoDevice = DBTools.getInstance(this).selectDevice(mac);
                     for (final MokoDevice device : devices) {
                         if (mac.equals(device.mac)) {
-                            if (!device.topicPublish.equals(mokoDevice.topicPublish)) {
-                                // 取消订阅
+                            if (TextUtils.isEmpty(mAppMqttConfig.topicSubscribe)) {
                                 try {
-                                    MQTTSupport.getInstance().unSubscribe(device.topicPublish);
+                                    if (!device.topicPublish.equals(mokoDevice.topicPublish)) {
+                                        // 取消订阅旧主题
+                                        MQTTSupport.getInstance().unSubscribe(device.topicPublish);
+                                        // 订阅新主题
+                                        MQTTSupport.getInstance().subscribe(mokoDevice.topicPublish, mAppMqttConfig.qos);
+                                    }
+                                    if (device.lwtEnable == 1
+                                            && !TextUtils.isEmpty(device.lwtTopic)
+                                            && !device.lwtTopic.equals(mokoDevice.topicPublish)) {
+                                        // 取消订阅旧遗愿主题
+                                        MQTTSupport.getInstance().unSubscribe(device.lwtTopic);
+                                        // 订阅新遗愿主题
+                                        MQTTSupport.getInstance().subscribe(mokoDevice.lwtTopic, mAppMqttConfig.qos);
+
+                                    }
                                 } catch (MqttException e) {
                                     e.printStackTrace();
                                 }
@@ -245,6 +260,8 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
                             device.mqttInfo = mokoDevice.mqttInfo;
                             device.topicPublish = mokoDevice.topicPublish;
                             device.topicSubscribe = mokoDevice.topicSubscribe;
+                            device.lwtEnable = mokoDevice.lwtEnable;
+                            device.lwtTopic = mokoDevice.lwtTopic;
                             break;
                         }
                     }
@@ -263,12 +280,12 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
     public void mainAddDevices(View view) {
         if (isWindowLocked())
             return;
-        if (TextUtils.isEmpty(MQTTAppConfigStr)) {
+        if (TextUtils.isEmpty(mAppMqttConfigStr)) {
             startActivityForResult(new Intent(this, SetAppMQTTActivity.class), AppConstants.REQUEST_CODE_MQTT_CONFIG_APP);
             return;
         }
         if (Utils.isNetworkAvailable(this)) {
-            MQTTConfig MQTTAppConfig = new Gson().fromJson(MQTTAppConfigStr, MQTTConfig.class);
+            MQTTConfig MQTTAppConfig = new Gson().fromJson(mAppMqttConfigStr, MQTTConfig.class);
             if (TextUtils.isEmpty(MQTTAppConfig.host)) {
                 startActivityForResult(new Intent(this, SetAppMQTTActivity.class), AppConstants.REQUEST_CODE_MQTT_CONFIG_APP);
                 return;
@@ -314,10 +331,16 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
             }
             showLoadingProgressDialog();
             // 取消订阅
-            try {
-                MQTTSupport.getInstance().unSubscribe(mokoDevice.topicPublish);
-            } catch (MqttException e) {
-                e.printStackTrace();
+            if (TextUtils.isEmpty(mAppMqttConfig.topicSubscribe)) {
+                try {
+                    MQTTSupport.getInstance().unSubscribe(mokoDevice.topicPublish);
+                    if (mokoDevice.lwtEnable == 1
+                            && !TextUtils.isEmpty(mokoDevice.lwtTopic)
+                            && !mokoDevice.lwtTopic.equals(mokoDevice.topicPublish))
+                        MQTTSupport.getInstance().unSubscribe(mokoDevice.lwtTopic);
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
             }
             XLog.i(String.format("删除设备:%s", mokoDevice.name));
             DBTools.getInstance(RemoteMainActivity.this).deleteDevice(mokoDevice);
@@ -334,22 +357,25 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
     }
 
     private void subscribeAllDevices() {
-        MQTTConfig MQTTAppConfig = new Gson().fromJson(MQTTAppConfigStr, MQTTConfig.class);
-        if (!TextUtils.isEmpty(MQTTAppConfig.topicSubscribe)) {
+        if (!TextUtils.isEmpty(mAppMqttConfig.topicSubscribe)) {
             try {
-                MQTTSupport.getInstance().subscribe(MQTTAppConfig.topicSubscribe, MQTTAppConfig.qos);
+                MQTTSupport.getInstance().subscribe(mAppMqttConfig.topicSubscribe, mAppMqttConfig.qos);
             } catch (MqttException e) {
                 e.printStackTrace();
             }
         } else {
-            if (devices.isEmpty()) {
+            if (devices.isEmpty())
                 return;
-            }
             for (MokoDevice device : devices) {
                 try {
-                    if (TextUtils.isEmpty(MQTTAppConfig.topicSubscribe)) {
-                        MQTTSupport.getInstance().subscribe(device.topicPublish, MQTTAppConfig.qos);
-                    }
+                    // 订阅设备发布主题
+                    if (TextUtils.isEmpty(mAppMqttConfig.topicSubscribe))
+                        MQTTSupport.getInstance().subscribe(device.topicPublish, mAppMqttConfig.qos);
+                    // 订阅遗愿主题
+                    if (device.lwtEnable == 1
+                            && !TextUtils.isEmpty(device.lwtTopic)
+                            && !device.lwtTopic.equals(device.topicPublish))
+                        MQTTSupport.getInstance().subscribe(device.lwtTopic, mAppMqttConfig.qos);
                 } catch (MqttException e) {
                     e.printStackTrace();
                 }
@@ -430,7 +456,8 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
         if (resultCode != RESULT_OK)
             return;
         if (requestCode == AppConstants.REQUEST_CODE_MQTT_CONFIG_APP) {
-            MQTTAppConfigStr = data.getStringExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_APP);
+            mAppMqttConfigStr = data.getStringExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_APP);
+            mAppMqttConfig = new Gson().fromJson(mAppMqttConfigStr, MQTTConfig.class);
             mBind.tvTitle.setText(getString(R.string.app_name));
             // 订阅所有设备的Topic
             subscribeAllDevices();

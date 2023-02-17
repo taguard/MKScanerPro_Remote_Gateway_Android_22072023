@@ -199,7 +199,7 @@ public class MqttSettingsActivity extends BaseActivity<ActivityMqttDeviceRemoteB
                                 }
                             }
                             if (flag == 0x00) {
-                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 3, 5));
+                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 5));
                                 // read
                                 switch (configKeyEnum) {
                                     case KEY_MQTT_USERNAME:
@@ -438,7 +438,7 @@ public class MqttSettingsActivity extends BaseActivity<ActivityMqttDeviceRemoteB
 
         if (topicPublish.equals(topicSubscribe)) {
             ToastUtils.showToast(this, "Subscribed and published topic can't be same !");
-            return false;
+            return true;
         }
         if (!generalFragment.isValid() || !sslFragment.isValid() || !lwtFragment.isValid())
             return true;
@@ -447,7 +447,6 @@ public class MqttSettingsActivity extends BaseActivity<ActivityMqttDeviceRemoteB
         mqttDeviceConfig.clientId = clientId;
         mqttDeviceConfig.cleanSession = generalFragment.isCleanSession();
         mqttDeviceConfig.qos = generalFragment.getQos();
-        mqttDeviceConfig.keepAlive = generalFragment.getKeepAlive();
         mqttDeviceConfig.keepAlive = generalFragment.getKeepAlive();
         mqttDeviceConfig.topicSubscribe = topicSubscribe;
         mqttDeviceConfig.topicPublish = topicPublish;
@@ -458,10 +457,12 @@ public class MqttSettingsActivity extends BaseActivity<ActivityMqttDeviceRemoteB
         mqttDeviceConfig.clientKeyPath = sslFragment.getClientKeyPath();
         mqttDeviceConfig.clientCertPath = sslFragment.getClientCertPath();
         mqttDeviceConfig.lwtEnable = lwtFragment.getLwtEnable();
-        mqttDeviceConfig.lwtQos = lwtFragment.getQos();
-        mqttDeviceConfig.lwtRetain = lwtFragment.getLwtRetain();
-        mqttDeviceConfig.lwtTopic = lwtFragment.getTopic();
-        mqttDeviceConfig.lwtPayload = lwtFragment.getPayload();
+        if (mqttDeviceConfig.lwtEnable) {
+            mqttDeviceConfig.lwtQos = lwtFragment.getQos();
+            mqttDeviceConfig.lwtRetain = lwtFragment.getLwtRetain();
+            mqttDeviceConfig.lwtTopic = lwtFragment.getTopic();
+            mqttDeviceConfig.lwtPayload = lwtFragment.getPayload();
+        }
         return false;
     }
 
@@ -478,10 +479,12 @@ public class MqttSettingsActivity extends BaseActivity<ActivityMqttDeviceRemoteB
             orderTasks.add(OrderTaskAssembler.setMqttPublishTopic(mqttDeviceConfig.topicPublish));
             orderTasks.add(OrderTaskAssembler.setMqttSubscribeTopic(mqttDeviceConfig.topicSubscribe));
             orderTasks.add(OrderTaskAssembler.setMqttLwtEnable(mqttDeviceConfig.lwtEnable ? 1 : 0));
-            orderTasks.add(OrderTaskAssembler.setMqttLwtQos(mqttDeviceConfig.lwtQos));
-            orderTasks.add(OrderTaskAssembler.setMqttLwtRetain(mqttDeviceConfig.lwtRetain ? 1 : 0));
-            orderTasks.add(OrderTaskAssembler.setMqttLwtTopic(mqttDeviceConfig.lwtTopic));
-            orderTasks.add(OrderTaskAssembler.setMqttLwtPayload(mqttDeviceConfig.lwtPayload));
+            if (mqttDeviceConfig.lwtEnable) {
+                orderTasks.add(OrderTaskAssembler.setMqttLwtQos(mqttDeviceConfig.lwtQos));
+                orderTasks.add(OrderTaskAssembler.setMqttLwtRetain(mqttDeviceConfig.lwtRetain ? 1 : 0));
+                orderTasks.add(OrderTaskAssembler.setMqttLwtTopic(mqttDeviceConfig.lwtTopic));
+                orderTasks.add(OrderTaskAssembler.setMqttLwtPayload(mqttDeviceConfig.lwtPayload));
+            }
             if (!TextUtils.isEmpty(mqttDeviceConfig.username)) {
                 orderTasks.add(OrderTaskAssembler.setMqttUserName(mqttDeviceConfig.username));
             }

@@ -254,7 +254,10 @@ public class BleOtherInfoActivity extends BaseActivity<ActivityOtherInfoBinding>
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setMessage("Please confirm again whether to disconnect the gateway from BLE devices?");
         dialog.setOnAlertConfirmListener(() -> {
-            if (isWindowLocked()) return;
+            if (!MQTTSupport.getInstance().isConnected()) {
+                ToastUtils.showToast(this, R.string.network_error);
+                return;
+            }
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 ToastUtils.showToast(BleOtherInfoActivity.this, "Setup failed");

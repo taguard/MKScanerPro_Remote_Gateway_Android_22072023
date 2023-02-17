@@ -205,18 +205,26 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                                     case KEY_WIFI_EAP_TYPE:
                                         mEAPTypeSelected = value[4];
                                         mBind.tvEpaType.setText(mEAPTypeValues.get(mEAPTypeSelected));
-                                        if (mSecuritySelected != 0) {
-                                            mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
-                                            mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
-                                            mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
+                                        if (mSecuritySelected == 0) {
+                                            mBind.llCa.setVisibility(View.GONE);
+                                            mBind.clUsername.setVisibility(View.GONE);
+                                            mBind.clPassword.setVisibility(View.VISIBLE);
+                                            mBind.cbVerifyServer.setVisibility(View.GONE);
+                                            mBind.clDomainId.setVisibility(View.GONE);
+                                            mBind.llCert.setVisibility(View.GONE);
+                                            mBind.llKey.setVisibility(View.GONE);
+                                        } else {
                                             if (mEAPTypeSelected != 2)
                                                 mBind.llCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
                                             else
                                                 mBind.llCa.setVisibility(View.VISIBLE);
+                                            mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
+                                            mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
+                                            mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
+                                            mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+                                            mBind.llCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
+                                            mBind.llKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                                         }
-                                        mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
-                                        mBind.llCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
-                                        mBind.llKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                                         break;
                                     case KEY_WIFI_EAP_USERNAME:
                                         mBind.etUsername.setText(new String(Arrays.copyOfRange(value, 4, 4 + length)));
@@ -256,15 +264,14 @@ public class WifiSettingsActivity extends BaseActivity<ActivityWifiSettingsBindi
                 mBind.llCert.setVisibility(View.GONE);
                 mBind.llKey.setVisibility(View.GONE);
             } else {
-                if (mEAPTypeSelected != 2) {
+                if (mEAPTypeSelected != 2)
                     mBind.llCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
-                } else {
+                else
                     mBind.llCa.setVisibility(View.VISIBLE);
-                }
                 mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.clPassword.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
                 mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
-                mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE: View.GONE);
+                mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.llCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.llKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             }

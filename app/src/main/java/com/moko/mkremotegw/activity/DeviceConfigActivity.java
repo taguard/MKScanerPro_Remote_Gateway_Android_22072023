@@ -181,6 +181,8 @@ public class DeviceConfigActivity extends BaseActivity<ActivityDeviceConfigBindi
                     mokoDevice.mqttInfo = mqttConfigStr;
                     mokoDevice.topicSubscribe = mDeviceMqttConfig.topicSubscribe;
                     mokoDevice.topicPublish = mDeviceMqttConfig.topicPublish;
+                    mokoDevice.lwtEnable = mDeviceMqttConfig.lwtEnable ? 1 : 0;
+                    mokoDevice.lwtTopic = mDeviceMqttConfig.lwtTopic;
                     mokoDevice.deviceType = mSelectedDeviceType;
                     DBTools.getInstance(DeviceConfigActivity.this).insertDevice(mokoDevice);
                 } else {
@@ -189,6 +191,8 @@ public class DeviceConfigActivity extends BaseActivity<ActivityDeviceConfigBindi
                     mokoDevice.mqttInfo = mqttConfigStr;
                     mokoDevice.topicSubscribe = mDeviceMqttConfig.topicSubscribe;
                     mokoDevice.topicPublish = mDeviceMqttConfig.topicPublish;
+                    mokoDevice.lwtEnable = mDeviceMqttConfig.lwtEnable ? 1 : 0;
+                    mokoDevice.lwtTopic = mDeviceMqttConfig.lwtTopic;
                     mokoDevice.deviceType = mSelectedDeviceType;
                     DBTools.getInstance(DeviceConfigActivity.this).updateDevice(mokoDevice);
                 }
@@ -328,7 +332,9 @@ public class DeviceConfigActivity extends BaseActivity<ActivityDeviceConfigBindi
         }
         // 订阅遗愿主题
         try {
-            if (mAppMqttConfig.lwtEnable && !TextUtils.isEmpty(mAppMqttConfig.lwtTopic)) {
+            if (mDeviceMqttConfig.lwtEnable
+                    && !TextUtils.isEmpty(mDeviceMqttConfig.lwtTopic)
+                    && !mDeviceMqttConfig.lwtTopic.equals(mDeviceMqttConfig.topicPublish)) {
                 MQTTSupport.getInstance().subscribe(mDeviceMqttConfig.lwtTopic, mAppMqttConfig.qos);
             }
         } catch (MqttException e) {
