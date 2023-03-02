@@ -135,14 +135,17 @@ public class SSLDevicePathFragment extends Fragment {
             mBind.llCa.setVisibility(View.GONE);
             mBind.llClientKey.setVisibility(View.GONE);
             mBind.llClientCert.setVisibility(View.GONE);
+            mBind.clCertServer.setVisibility(View.GONE);
         } else if (selected == 1) {
             mBind.llCa.setVisibility(View.VISIBLE);
             mBind.llClientKey.setVisibility(View.GONE);
             mBind.llClientCert.setVisibility(View.GONE);
+            mBind.clCertServer.setVisibility(View.VISIBLE);
         } else if (selected == 2) {
             mBind.llCa.setVisibility(View.VISIBLE);
             mBind.llClientKey.setVisibility(View.VISIBLE);
             mBind.llClientCert.setVisibility(View.VISIBLE);
+            mBind.clCertServer.setVisibility(View.VISIBLE);
         }
     }
 
@@ -178,6 +181,10 @@ public class SSLDevicePathFragment extends Fragment {
         this.port = port;
         if (mBind == null)
             return;
+        if (port < 0) {
+            mBind.etMqttPort.setText("");
+            return;
+        }
         mBind.etMqttPort.setText(String.valueOf(port));
     }
 
@@ -227,7 +234,7 @@ public class SSLDevicePathFragment extends Fragment {
                 return false;
             }
             int portInt = Integer.parseInt(port);
-            if (portInt > 65535) {
+            if (portInt < 1 || portInt > 65535) {
                 ToastUtils.showToast(activity, "Port error");
                 return false;
             }

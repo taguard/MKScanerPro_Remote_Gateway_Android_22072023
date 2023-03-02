@@ -485,12 +485,8 @@ public class MqttSettingsActivity extends BaseActivity<ActivityMqttDeviceRemoteB
                 orderTasks.add(OrderTaskAssembler.setMqttLwtTopic(mqttDeviceConfig.lwtTopic));
                 orderTasks.add(OrderTaskAssembler.setMqttLwtPayload(mqttDeviceConfig.lwtPayload));
             }
-            if (!TextUtils.isEmpty(mqttDeviceConfig.username)) {
-                orderTasks.add(OrderTaskAssembler.setMqttUserName(mqttDeviceConfig.username));
-            }
-            if (!TextUtils.isEmpty(mqttDeviceConfig.password)) {
-                orderTasks.add(OrderTaskAssembler.setMqttPassword(mqttDeviceConfig.password));
-            }
+            orderTasks.add(OrderTaskAssembler.setMqttUserName(mqttDeviceConfig.username));
+            orderTasks.add(OrderTaskAssembler.setMqttPassword(mqttDeviceConfig.password));
             orderTasks.add(OrderTaskAssembler.setMqttConnectMode(mqttDeviceConfig.connectMode));
             if (mqttDeviceConfig.connectMode == 2) {
                 File file = new File(mqttDeviceConfig.caPath);

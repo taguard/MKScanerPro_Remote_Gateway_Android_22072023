@@ -211,11 +211,15 @@ public class ScannerFilterActivity extends BaseActivity<ActivityScannerFilterBin
             }
             filterMacAddress.clear();
             filterMacAddress.add(filerMacStr);
+        } else {
+            filterMacAddress.clear();
         }
         String filerNameStr = mBind.etAdvName.getText().toString();
         if (!TextUtils.isEmpty(filerMacStr)) {
             filterAdvName.clear();
             filterAdvName.add(filerNameStr);
+        } else {
+            filterAdvName.clear();
         }
         return false;
     }

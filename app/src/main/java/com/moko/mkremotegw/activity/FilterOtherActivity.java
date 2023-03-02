@@ -347,6 +347,10 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                         return false;
                     }
                 }
+                if (min == 0 && max != 0) {
+                    ToastUtils.showToast(this, "Para Error");
+                    return false;
+                }
                 if (max < min) {
                     ToastUtils.showToast(this, "Para Error");
                     return false;

@@ -416,7 +416,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_port_empty));
             return true;
         }
-        if (Integer.parseInt(port) > 65535) {
+        if (Integer.parseInt(port) < 1 || Integer.parseInt(port) > 65535) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_port));
             return true;
         }
@@ -777,6 +777,11 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         dialog.setOnAlertConfirmListener(() -> {
             mqttDeviceConfig = new MQTTConfig();
             mqttDeviceConfig.keepAlive = -1;
+            sslFragment.setHost("");
+            sslFragment.setPort(-1);
+            sslFragment.setCAPath("");
+            sslFragment.setClientCertPath("");
+            sslFragment.setClientKeyPath("");
             initData();
         });
         dialog.show(getSupportFragmentManager());

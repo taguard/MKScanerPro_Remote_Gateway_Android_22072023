@@ -129,9 +129,16 @@ public class BleManagerActivity extends BaseActivity<ActivityBleDevicesBinding> 
                 for (BleDevice device : bleDevices) {
                     if (device.rssi < filterRssi)
                         continue;
-                    if (!mBleDevicesMap.containsKey(device.mac))
+                    if (!mBleDevicesMap.containsKey(device.mac)) {
                         device.index = mIndex++;
-                    mBleDevicesMap.put(device.mac, device);
+                        mBleDevicesMap.put(device.mac, device);
+                    } else {
+                        BleDevice existDevice = mBleDevicesMap.get(device.mac);
+                        existDevice.rssi = device.rssi;
+                        existDevice.adv_name = device.adv_name;
+                        existDevice.type_code = device.type_code;
+                        existDevice.connectable = device.connectable;
+                    }
                 }
             });
         }

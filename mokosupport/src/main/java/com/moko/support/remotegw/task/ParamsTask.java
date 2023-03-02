@@ -307,7 +307,7 @@ public class ParamsTask extends OrderTask {
         response.responseValue = data;
     }
 
-    public void setMqttPort(@IntRange(from = 0, to = 65535) int port) {
+    public void setMqttPort(@IntRange(from = 1, to = 65535) int port) {
         byte[] dataBytes = MokoUtils.toByteArray(port, 2);
         data = new byte[]{
                 (byte) 0xED,
@@ -751,7 +751,6 @@ public class ParamsTask extends OrderTask {
     }
 
 
-
     public void setFilterNameRules(ArrayList<String> filterNameRules) {
         int length = 0;
         for (String name : filterNameRules) {
@@ -840,7 +839,7 @@ public class ParamsTask extends OrderTask {
             data[1] = (byte) 0x01;
             data[2] = (byte) key.getParamsKey();
             data[3] = (byte) 0x01;
-            data[4] = (byte) remainPack;
+            data[4] = (byte) packetIndex;
             data[5] = (byte) dataLength;
             for (int i = 0; i < dataLength; i++) {
                 data[i + 6] = dataBytes[i];
@@ -877,9 +876,10 @@ public class ParamsTask extends OrderTask {
             }
         } else {
             final int cmd = value[2] & 0xFF;
-            final int remainPack = value[4] & 0xFF;
+            final int packetCount = value[3] & 0xFF;
+            final int indexPack = value[4] & 0xFF;
             final int length = value[5] & 0xFF;
-            if (remainPack > 0) {
+            if (indexPack < (packetCount - 1)) {
                 byte[] remainBytes = Arrays.copyOfRange(value, 6, 6 + length);
                 dataBytesStr += MokoUtils.bytesToHexString(remainBytes);
             } else {

@@ -49,7 +49,7 @@ public class FilterUrlActivity extends BaseActivity<ActivityFilterUrlBinding> {
 
             return null;
         };
-        mBind.etUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(255), inputFilter});
+        mBind.etUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(37), inputFilter});
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
