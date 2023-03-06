@@ -26,7 +26,7 @@ import com.moko.mkremotegw.entity.MQTTConfig;
 import com.moko.mkremotegw.entity.MokoDevice;
 import com.moko.mkremotegw.fragment.GeneralDeviceFragment;
 import com.moko.mkremotegw.fragment.LWTFragment;
-import com.moko.mkremotegw.fragment.SSLDevicePathFragment;
+import com.moko.mkremotegw.fragment.SSLDeviceUrlFragment;
 import com.moko.mkremotegw.fragment.UserDeviceFragment;
 import com.moko.mkremotegw.utils.FileUtils;
 import com.moko.mkremotegw.utils.SPUtiles;
@@ -66,7 +66,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
     private GeneralDeviceFragment generalFragment;
     private UserDeviceFragment userFragment;
-    private SSLDevicePathFragment sslFragment;
+    private SSLDeviceUrlFragment sslFragment;
     private LWTFragment lwtFragment;
     private MQTTFragmentAdapter adapter;
     private ArrayList<Fragment> fragments;
@@ -144,7 +144,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         fragments = new ArrayList<>();
         generalFragment = GeneralDeviceFragment.newInstance();
         userFragment = UserDeviceFragment.newInstance();
-        sslFragment = SSLDevicePathFragment.newInstance();
+        sslFragment = SSLDeviceUrlFragment.newInstance();
         lwtFragment = LWTFragment.newInstance();
         fragments.add(generalFragment);
         fragments.add(userFragment);
@@ -163,9 +163,9 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         generalFragment.setKeepAlive(mqttDeviceConfig.keepAlive);
         userFragment.setUserName(mqttDeviceConfig.username);
         userFragment.setPassword(mqttDeviceConfig.password);
-        sslFragment.setCAPath(mqttDeviceConfig.caPath);
-        sslFragment.setClientKeyPath(mqttDeviceConfig.clientKeyPath);
-        sslFragment.setClientCertPath(mqttDeviceConfig.clientCertPath);
+        sslFragment.setCAUrl(mqttDeviceConfig.caPath);
+        sslFragment.setClientKeyUrl(mqttDeviceConfig.clientKeyPath);
+        sslFragment.setClientCertUrl(mqttDeviceConfig.clientCertPath);
         sslFragment.setConnectMode(mqttDeviceConfig.connectMode);
         lwtFragment.setLwtEnable(mqttDeviceConfig.lwtEnable);
         lwtFragment.setLwtRetain(mqttDeviceConfig.lwtRetain);
@@ -381,18 +381,14 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
     }
 
     private void setMqttCertFile() {
-        String host = sslFragment.getSSLHost();
-        int port = sslFragment.getSSLPort();
-        String caFilePath = sslFragment.getCAPath();
-        String certFilePath = sslFragment.getClientCertPath();
-        String keyFilePath = sslFragment.getClientKeyPath();
+        String caFileUrl = sslFragment.getCAUrl();
+        String certFileUrl = sslFragment.getClientCertUrl();
+        String keyFileUrl = sslFragment.getClientKeyUrl();
         int msgId = MQTTConstants.CONFIG_MSG_ID_MQTT_CERT_FILE;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("host", host);
-        jsonObject.addProperty("port", port);
-        jsonObject.addProperty("ca_file", caFilePath);
-        jsonObject.addProperty("client_cert_file", certFilePath);
-        jsonObject.addProperty("client_key_file", keyFilePath);
+        jsonObject.addProperty("ca_url", caFileUrl);
+        jsonObject.addProperty("client_cert_url", certFileUrl);
+        jsonObject.addProperty("client_key_url", keyFileUrl);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
@@ -478,9 +474,9 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         mqttDeviceConfig.username = userFragment.getUsername();
         mqttDeviceConfig.password = userFragment.getPassword();
         mqttDeviceConfig.connectMode = sslFragment.getConnectMode();
-        mqttDeviceConfig.caPath = sslFragment.getCAPath();
-        mqttDeviceConfig.clientKeyPath = sslFragment.getClientKeyPath();
-        mqttDeviceConfig.clientCertPath = sslFragment.getClientCertPath();
+        mqttDeviceConfig.caPath = sslFragment.getCAUrl();
+        mqttDeviceConfig.clientKeyPath = sslFragment.getClientKeyUrl();
+        mqttDeviceConfig.clientCertPath = sslFragment.getClientCertUrl();
         mqttDeviceConfig.lwtEnable = lwtFragment.getLwtEnable();
         mqttDeviceConfig.lwtRetain = lwtFragment.getLwtRetain();
         mqttDeviceConfig.lwtQos = lwtFragment.getQos();
@@ -777,11 +773,9 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         dialog.setOnAlertConfirmListener(() -> {
             mqttDeviceConfig = new MQTTConfig();
             mqttDeviceConfig.keepAlive = -1;
-            sslFragment.setHost("");
-            sslFragment.setPort(-1);
-            sslFragment.setCAPath("");
-            sslFragment.setClientCertPath("");
-            sslFragment.setClientKeyPath("");
+            sslFragment.setCAUrl("");
+            sslFragment.setClientCertUrl("");
+            sslFragment.setClientKeyUrl("");
             initData();
         });
         dialog.show(getSupportFragmentManager());

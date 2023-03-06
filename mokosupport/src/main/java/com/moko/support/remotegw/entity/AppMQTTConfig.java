@@ -6,7 +6,7 @@ import android.text.TextUtils;
 
 import java.io.Serializable;
 
-public class MQTTConfig implements Serializable {
+public class AppMQTTConfig implements Serializable {
     public String host = "";
     public String port = "1883";
     public boolean cleanSession = true;
@@ -14,7 +14,6 @@ public class MQTTConfig implements Serializable {
     public int qos = 1;
     public int keepAlive = 60;
     public String clientId = "";
-    public String uniqueId = "";
     public String username = "";
     public String password = "";
     public String caPath;

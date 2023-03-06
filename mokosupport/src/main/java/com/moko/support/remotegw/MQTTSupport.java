@@ -9,7 +9,7 @@ import android.text.TextUtils;
 
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
-import com.moko.support.remotegw.entity.MQTTConfig;
+import com.moko.support.remotegw.entity.AppMQTTConfig;
 import com.moko.support.remotegw.event.MQTTConnectionCompleteEvent;
 import com.moko.support.remotegw.event.MQTTConnectionFailureEvent;
 import com.moko.support.remotegw.event.MQTTConnectionLostEvent;
@@ -130,7 +130,7 @@ public class MQTTSupport {
     public void connectMqtt(String mqttAppConfigStr) throws FileNotFoundException {
         if (TextUtils.isEmpty(mqttAppConfigStr))
             return;
-        MQTTConfig mqttConfig = new Gson().fromJson(mqttAppConfigStr, MQTTConfig.class);
+        AppMQTTConfig mqttConfig = new Gson().fromJson(mqttAppConfigStr, AppMQTTConfig.class);
         if (!mqttConfig.isError()) {
             this.mqttConfigStr = mqttAppConfigStr;
             String uri;

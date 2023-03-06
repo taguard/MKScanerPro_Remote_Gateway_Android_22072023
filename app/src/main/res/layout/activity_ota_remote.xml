@@ -26,15 +26,13 @@
             android:text="OTA"
             android:textColor="@color/white_ffffff"
             android:textSize="17sp" />
-
-
     </RelativeLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:focusable="true"
         android:layout_marginTop="10dp"
-        android:focusable="true"
         android:focusableInTouchMode="true"
         android:paddingLeft="12dp"
         android:paddingRight="12dp">
@@ -43,86 +41,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:text="Host"
+            android:text="Firmware file URL"
             android:textColor="@color/black_333333"
             android:textSize="15sp" />
 
         <EditText
-            android:id="@+id/et_host"
+            android:id="@+id/et_firmware_file_url"
             android:layout_width="match_parent"
             android:layout_height="45dp"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="80dp"
+            android:layout_marginLeft="130dp"
             android:background="@drawable/shape_corner_btn_bg_white"
-            android:hint="1-64 Characters"
-            android:maxLength="64"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            android:singleLine="true"
-            android:text=""
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:paddingLeft="12dp"
-        android:paddingRight="12dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:text="Port"
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-
-        <EditText
-            android:id="@+id/et_port"
-            android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="80dp"
-            android:background="@drawable/shape_corner_btn_bg_white"
-            android:hint="1-65535"
-            android:inputType="number"
-            android:maxLength="5"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            android:singleLine="true"
-            android:text=""
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:paddingLeft="12dp"
-        android:paddingRight="12dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:text="File Path"
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-
-        <EditText
-            android:id="@+id/et_file_path"
-            android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="80dp"
-            android:background="@drawable/shape_corner_btn_bg_white"
-            android:hint="1-100 Characters"
-            android:maxLength="100"
+            android:hint="1-256 Characters"
+            android:maxLength="256"
             android:paddingLeft="5dp"
             android:paddingRight="5dp"
             android:singleLine="true"

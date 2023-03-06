@@ -54,9 +54,7 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
     protected void onCreate() {
         mBind.cbVerifyServer.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (mSecuritySelected != 0 && mEAPTypeSelected != 2)
-                mBind.clHost.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-            mBind.clPort.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-            mBind.clCa.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+                mBind.clCa.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         });
         mSecurityValues = new ArrayList<>();
         mSecurityValues.add("Personal");
@@ -77,7 +75,9 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
         mBind.etEapPassword.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
         mBind.etSsid.setFilters(new InputFilter[]{new InputFilter.LengthFilter(32), filter});
         mBind.etDomainId.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
-        mBind.etHost.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
+        mBind.etCaFileUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), filter});
+        mBind.etCertFileUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), filter});
+        mBind.etKeyFileUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), filter});
 
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
@@ -140,12 +140,8 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                 mBind.cbVerifyServer.setChecked(result.data.get("eap_verify_server").getAsInt() == 1);
                 if (mEAPTypeSelected != 2) {
                     mBind.clCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
-                    mBind.clHost.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
-                    mBind.clPort.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
                 } else {
                     mBind.clCa.setVisibility(View.VISIBLE);
-                    mBind.clHost.setVisibility(View.VISIBLE);
-                    mBind.clPort.setVisibility(View.VISIBLE);
                 }
                 mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
@@ -248,18 +244,14 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
     }
 
     private void setWifiCertFile() {
-        String host = mBind.etHost.getText().toString();
-        String port = mBind.etPort.getText().toString();
-        String caFilePath = mBind.etCaFilePath.getText().toString();
-        String certFilePath = mBind.etCertFilePath.getText().toString();
-        String keyFilePath = mBind.etKeyFilePath.getText().toString();
+        String caFileUrl = mBind.etCaFileUrl.getText().toString();
+        String certFileUrl = mBind.etCertFileUrl.getText().toString();
+        String keyFileUrl = mBind.etKeyFileUrl.getText().toString();
         int msgId = MQTTConstants.CONFIG_MSG_ID_WIFI_CERT_FILE;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("host", host);
-        jsonObject.addProperty("port", Integer.parseInt(port));
-        jsonObject.addProperty("ca_file", caFilePath);
-        jsonObject.addProperty("client_cert_file", certFilePath);
-        jsonObject.addProperty("client_key_file", keyFilePath);
+        jsonObject.addProperty("ca_url", caFileUrl);
+        jsonObject.addProperty("client_cert_url", certFileUrl);
+        jsonObject.addProperty("client_key_url", keyFileUrl);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
@@ -288,8 +280,6 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             mBind.clEapType.setVisibility(mSecuritySelected != 0 ? View.VISIBLE : View.GONE);
             mBind.clPassword.setVisibility(mSecuritySelected != 0 ? View.GONE : View.VISIBLE);
             if (mSecuritySelected == 0) {
-                mBind.clHost.setVisibility(View.GONE);
-                mBind.clPort.setVisibility(View.GONE);
                 mBind.clCa.setVisibility(View.GONE);
                 mBind.clUsername.setVisibility(View.GONE);
                 mBind.clEapPassword.setVisibility(View.GONE);
@@ -300,12 +290,8 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                 mBind.tvCertTips.setVisibility(View.GONE);
             } else {
                 if (mEAPTypeSelected != 2) {
-                    mBind.clHost.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
-                    mBind.clPort.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
                     mBind.clCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
                 } else {
-                    mBind.clHost.setVisibility(View.VISIBLE);
-                    mBind.clPort.setVisibility(View.VISIBLE);
                     mBind.clCa.setVisibility(View.VISIBLE);
                 }
                 mBind.clUsername.setVisibility(mEAPTypeSelected == 2 ? View.GONE : View.VISIBLE);
@@ -332,12 +318,8 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             mBind.cbVerifyServer.setVisibility(mEAPTypeSelected == 2 ? View.INVISIBLE : View.VISIBLE);
             mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             if (mEAPTypeSelected != 2) {
-                mBind.clHost.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
-                mBind.clPort.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
                 mBind.clCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
             } else {
-                mBind.clHost.setVisibility(View.VISIBLE);
-                mBind.clPort.setVisibility(View.VISIBLE);
                 mBind.clCa.setVisibility(View.VISIBLE);
             }
             mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
@@ -364,13 +346,8 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             if (mEAPTypeSelected != 2 && !mBind.cbVerifyServer.isChecked()) {
                 return false;
             }
-            String host = mBind.etHost.getText().toString();
-            String portStr = mBind.etPort.getText().toString();
-            String caFilePath = mBind.etCaFilePath.getText().toString();
-            if (TextUtils.isEmpty(host) || TextUtils.isEmpty(portStr) || TextUtils.isEmpty(caFilePath))
-                return true;
-            int port = Integer.parseInt(portStr);
-            if (port < 1 || port > 65535)
+            String caFileUrl = mBind.etCaFileUrl.getText().toString();
+            if (TextUtils.isEmpty(caFileUrl))
                 return true;
         }
         return false;

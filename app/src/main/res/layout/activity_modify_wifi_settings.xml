@@ -311,82 +311,6 @@
                 app:layout_constraintTop_toBottomOf="@id/cl_eap_password" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/cl_host"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:visibility="gone"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cb_verify_server">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Host"
-                    android:textColor="@color/black_333333"
-                    android:textSize="15sp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/et_host"
-                    app:layout_constraintLeft_toLeftOf="parent" />
-
-                <EditText
-                    android:id="@+id/et_host"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:hint="1-64 Characters"
-                    android:paddingLeft="5dp"
-                    android:paddingRight="5dp"
-                    android:singleLine="true"
-                    android:textColor="@color/black_333333"
-                    android:textColorHint="@color/grey_ebebeb"
-                    android:textSize="15sp"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.65" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/cl_port"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:visibility="gone"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cl_host">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Port"
-                    android:textColor="@color/black_333333"
-                    android:textSize="15sp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/et_port"
-                    app:layout_constraintLeft_toLeftOf="parent" />
-
-                <EditText
-                    android:id="@+id/et_port"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:hint="1-65535"
-                    android:inputType="number"
-                    android:maxLength="5"
-                    android:paddingLeft="5dp"
-                    android:paddingRight="5dp"
-                    android:singleLine="true"
-                    android:textColor="@color/black_333333"
-                    android:textColorHint="@color/grey_ebebeb"
-                    android:textSize="15sp"
-                    app:layout_constraintHorizontal_bias="1.0"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.65" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/cl_ca"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -395,23 +319,23 @@
                 android:visibility="gone"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/cl_port">
+                app:layout_constraintTop_toBottomOf="@id/cb_verify_server">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CA certificate path"
+                    android:text="CA cert file URL"
                     android:textColor="@color/black_333333"
                     android:textSize="15sp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/et_ca_file_path"
+                    app:layout_constraintBaseline_toBaselineOf="@id/et_ca_file_url"
                     app:layout_constraintLeft_toLeftOf="parent" />
 
                 <EditText
-                    android:id="@+id/et_ca_file_path"
+                    android:id="@+id/et_ca_file_url"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="1-100 Characters"
-                    android:maxLength="100"
+                    android:hint="1-256 Characters"
+                    android:maxLength="256"
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
                     android:singleLine="true"
@@ -422,7 +346,7 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.6" />
+                    app:layout_constraintWidth_percent="0.57" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -439,18 +363,18 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Client cert path"
+                    android:text="Client cert file URL"
                     android:textColor="@color/black_333333"
                     android:textSize="15sp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/et_cert_file_path"
+                    app:layout_constraintBaseline_toBaselineOf="@id/et_cert_file_url"
                     app:layout_constraintLeft_toLeftOf="parent" />
 
                 <EditText
-                    android:id="@+id/et_cert_file_path"
+                    android:id="@+id/et_cert_file_url"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="0-100 Characters"
-                    android:maxLength="100"
+                    android:hint="0-256 Characters"
+                    android:maxLength="256"
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
                     android:singleLine="true"
@@ -461,7 +385,7 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.6" />
+                    app:layout_constraintWidth_percent="0.57" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -478,18 +402,18 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Client key path"
+                    android:text="Client key file URL"
                     android:textColor="@color/black_333333"
                     android:textSize="15sp"
-                    app:layout_constraintBaseline_toBaselineOf="@id/et_key_file_path"
+                    app:layout_constraintBaseline_toBaselineOf="@id/et_key_file_url"
                     app:layout_constraintLeft_toLeftOf="parent" />
 
                 <EditText
-                    android:id="@+id/et_key_file_path"
+                    android:id="@+id/et_key_file_url"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:hint="0-100 Characters"
-                    android:maxLength="100"
+                    android:hint="0-256 Characters"
+                    android:maxLength="256"
                     android:paddingLeft="5dp"
                     android:paddingRight="5dp"
                     android:singleLine="true"
@@ -500,7 +424,7 @@
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintWidth_percent="0.6" />
+                    app:layout_constraintWidth_percent="0.57" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView

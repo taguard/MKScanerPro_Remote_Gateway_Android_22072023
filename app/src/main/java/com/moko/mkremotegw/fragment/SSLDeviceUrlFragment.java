@@ -10,7 +10,7 @@ import android.widget.CompoundButton;
 
 import com.moko.mkremotegw.R;
 import com.moko.mkremotegw.base.BaseActivity;
-import com.moko.mkremotegw.databinding.FragmentSslDevicePathBinding;
+import com.moko.mkremotegw.databinding.FragmentSslDeviceUrlBinding;
 import com.moko.mkremotegw.dialog.BottomDialog;
 import com.moko.mkremotegw.utils.ToastUtils;
 
@@ -18,30 +18,28 @@ import java.util.ArrayList;
 
 import androidx.fragment.app.Fragment;
 
-public class SSLDevicePathFragment extends Fragment {
+public class SSLDeviceUrlFragment extends Fragment {
 
-    private static final String TAG = SSLDevicePathFragment.class.getSimpleName();
-    private FragmentSslDevicePathBinding mBind;
+    private static final String TAG = SSLDeviceUrlFragment.class.getSimpleName();
+    private FragmentSslDeviceUrlBinding mBind;
 
 
     private BaseActivity activity;
 
     private int mConnectMode = 0;
 
-    private String host;
-    private int port;
-    private String caPath;
-    private String clientKeyPath;
-    private String clientCertPath;
+    private String caUrl;
+    private String clientKeyUrl;
+    private String clientCertUrl;
 
     private ArrayList<String> values;
     private int selected;
 
-    public SSLDevicePathFragment() {
+    public SSLDeviceUrlFragment() {
     }
 
-    public static SSLDevicePathFragment newInstance() {
-        SSLDevicePathFragment fragment = new SSLDevicePathFragment();
+    public static SSLDeviceUrlFragment newInstance() {
+        SSLDeviceUrlFragment fragment = new SSLDeviceUrlFragment();
         return fragment;
     }
 
@@ -55,7 +53,7 @@ public class SSLDevicePathFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        mBind = FragmentSslDevicePathBinding.inflate(inflater, container, false);
+        mBind = FragmentSslDeviceUrlBinding.inflate(inflater, container, false);
         activity = (BaseActivity) getActivity();
         mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
         mBind.cbSsl.setChecked(mConnectMode > 0);
@@ -76,26 +74,23 @@ public class SSLDevicePathFragment extends Fragment {
         values.add("Self signed certificates");
         if (mConnectMode > 0) {
             selected = mConnectMode - 1;
-            mBind.etCaPath.setText(caPath);
-            mBind.etClientKeyPath.setText(clientKeyPath);
-            mBind.etClientCertPath.setText(clientCertPath);
+            mBind.etCaUrl.setText(caUrl);
+            mBind.etClientKeyUrl.setText(clientKeyUrl);
+            mBind.etClientCertUrl.setText(clientCertUrl);
             mBind.tvCertification.setText(values.get(selected));
         }
         if (selected == 0) {
             mBind.llCa.setVisibility(View.GONE);
             mBind.llClientKey.setVisibility(View.GONE);
             mBind.llClientCert.setVisibility(View.GONE);
-            mBind.clCertServer.setVisibility(View.GONE);
         } else if (selected == 1) {
             mBind.llCa.setVisibility(View.VISIBLE);
             mBind.llClientKey.setVisibility(View.GONE);
             mBind.llClientCert.setVisibility(View.GONE);
-            mBind.clCertServer.setVisibility(View.VISIBLE);
         } else if (selected == 2) {
             mBind.llCa.setVisibility(View.VISIBLE);
             mBind.llClientKey.setVisibility(View.VISIBLE);
             mBind.llClientCert.setVisibility(View.VISIBLE);
-            mBind.clCertServer.setVisibility(View.VISIBLE);
         }
         return mBind.getRoot();
     }
@@ -125,9 +120,9 @@ public class SSLDevicePathFragment extends Fragment {
         mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
         if (mConnectMode > 0) {
             selected = mConnectMode - 1;
-            mBind.etCaPath.setText(caPath);
-            mBind.etClientKeyPath.setText(clientKeyPath);
-            mBind.etClientCertPath.setText(clientCertPath);
+            mBind.etCaUrl.setText(caUrl);
+            mBind.etClientKeyUrl.setText(clientKeyUrl);
+            mBind.etClientCertUrl.setText(clientCertUrl);
             mBind.tvCertification.setText(values.get(selected));
         }
         mBind.cbSsl.setChecked(mConnectMode > 0);
@@ -135,57 +130,36 @@ public class SSLDevicePathFragment extends Fragment {
             mBind.llCa.setVisibility(View.GONE);
             mBind.llClientKey.setVisibility(View.GONE);
             mBind.llClientCert.setVisibility(View.GONE);
-            mBind.clCertServer.setVisibility(View.GONE);
         } else if (selected == 1) {
             mBind.llCa.setVisibility(View.VISIBLE);
             mBind.llClientKey.setVisibility(View.GONE);
             mBind.llClientCert.setVisibility(View.GONE);
-            mBind.clCertServer.setVisibility(View.VISIBLE);
         } else if (selected == 2) {
             mBind.llCa.setVisibility(View.VISIBLE);
             mBind.llClientKey.setVisibility(View.VISIBLE);
             mBind.llClientCert.setVisibility(View.VISIBLE);
-            mBind.clCertServer.setVisibility(View.VISIBLE);
         }
     }
 
-    public void setCAPath(String caPath) {
-        this.caPath = caPath;
+    public void setCAUrl(String caUrl) {
+        this.caUrl = caUrl;
         if (mBind == null)
             return;
-        mBind.etCaPath.setText(caPath);
+        mBind.etCaUrl.setText(caUrl);
     }
 
-    public void setClientKeyPath(String clientKeyPath) {
-        this.clientKeyPath = clientKeyPath;
+    public void setClientKeyUrl(String clientKeyUrl) {
+        this.clientKeyUrl = clientKeyUrl;
         if (mBind == null)
             return;
-        mBind.etClientKeyPath.setText(clientKeyPath);
+        mBind.etClientKeyUrl.setText(clientKeyUrl);
     }
 
-    public void setClientCertPath(String clientCertPath) {
-        this.clientCertPath = clientCertPath;
+    public void setClientCertUrl(String clientCertUrl) {
+        this.clientCertUrl = clientCertUrl;
         if (mBind == null)
             return;
-        mBind.etClientCertPath.setText(clientCertPath);
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-        if (mBind == null)
-            return;
-        mBind.etMqttHost.setText(clientCertPath);
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-        if (mBind == null)
-            return;
-        if (port < 0) {
-            mBind.etMqttPort.setText("");
-            return;
-        }
-        mBind.etMqttPort.setText(String.valueOf(port));
+        mBind.etClientCertUrl.setText(clientCertUrl);
     }
 
     public void selectCertificate() {
@@ -199,19 +173,16 @@ public class SSLDevicePathFragment extends Fragment {
                 mBind.llCa.setVisibility(View.GONE);
                 mBind.llClientKey.setVisibility(View.GONE);
                 mBind.llClientCert.setVisibility(View.GONE);
-                mBind.clCertServer.setVisibility(View.GONE);
             } else if (selected == 1) {
                 mConnectMode = 2;
                 mBind.llCa.setVisibility(View.VISIBLE);
                 mBind.llClientKey.setVisibility(View.GONE);
                 mBind.llClientCert.setVisibility(View.GONE);
-                mBind.clCertServer.setVisibility(View.VISIBLE);
             } else if (selected == 2) {
                 mConnectMode = 3;
                 mBind.llCa.setVisibility(View.VISIBLE);
                 mBind.llClientKey.setVisibility(View.VISIBLE);
                 mBind.llClientCert.setVisibility(View.VISIBLE);
-                mBind.clCertServer.setVisibility(View.VISIBLE);
             }
         });
         dialog.show(activity.getSupportFragmentManager());
@@ -219,26 +190,9 @@ public class SSLDevicePathFragment extends Fragment {
 
 
     public boolean isValid() {
-        final String host = mBind.etMqttHost.getText().toString();
-        final String port = mBind.etMqttPort.getText().toString();
-        final String caFile = mBind.etCaPath.getText().toString();
-        final String clientKeyFile = mBind.etClientKeyPath.getText().toString();
-        final String clientCertFile = mBind.etClientCertPath.getText().toString();
-        if (mConnectMode > 1) {
-            if (TextUtils.isEmpty(host)) {
-                ToastUtils.showToast(activity, "Host error");
-                return false;
-            }
-            if (TextUtils.isEmpty(port)) {
-                ToastUtils.showToast(activity, "Port error");
-                return false;
-            }
-            int portInt = Integer.parseInt(port);
-            if (portInt < 1 || portInt > 65535) {
-                ToastUtils.showToast(activity, "Port error");
-                return false;
-            }
-        }
+        final String caFile = mBind.etCaUrl.getText().toString();
+        final String clientKeyFile = mBind.etClientKeyUrl.getText().toString();
+        final String clientCertFile = mBind.etClientCertUrl.getText().toString();
         if (mConnectMode == 2) {
             if (TextUtils.isEmpty(caFile)) {
                 ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
@@ -265,24 +219,15 @@ public class SSLDevicePathFragment extends Fragment {
         return mConnectMode;
     }
 
-    public String getSSLHost() {
-        return mBind.etMqttHost.getText().toString();
+    public String getCAUrl() {
+        return mBind.etCaUrl.getText().toString();
     }
 
-    public int getSSLPort() {
-        final String port = mBind.etMqttPort.getText().toString();
-        return Integer.parseInt(port);
+    public String getClientCertUrl() {
+        return mBind.etClientCertUrl.getText().toString();
     }
 
-    public String getCAPath() {
-        return mBind.etCaPath.getText().toString();
-    }
-
-    public String getClientCertPath() {
-        return mBind.etClientCertPath.getText().toString();
-    }
-
-    public String getClientKeyPath() {
-        return mBind.etClientKeyPath.getText().toString();
+    public String getClientKeyUrl() {
+        return mBind.etClientKeyUrl.getText().toString();
     }
 }

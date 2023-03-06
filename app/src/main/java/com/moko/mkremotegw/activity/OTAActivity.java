@@ -50,8 +50,7 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
 
             return null;
         };
-        mBind.etHost.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), inputFilter});
-        mBind.etFilePath.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100), inputFilter});
+        mBind.etFirmwareFileUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), inputFilter});
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
@@ -93,16 +92,14 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
                 ToastUtils.showToast(this, "Device is OTA, please wait");
                 return;
             }
-            String hostStr = mBind.etHost.getText().toString();
-            String portStr = mBind.etPort.getText().toString();
-            String filePathStr = mBind.etFilePath.getText().toString();
+            String firmwareFileUrlStr = mBind.etFirmwareFileUrl.getText().toString();
             XLog.i("升级固件");
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 ToastUtils.showToast(this, "Set up failed");
             }, 50 * 1000);
             showLoadingProgressDialog();
-            setOTA(hostStr, Integer.parseInt(portStr), filePathStr);
+            setOTA(firmwareFileUrlStr);
         }
         if (msg_id == MQTTConstants.NOTIFY_MSG_ID_OTA_RESULT) {
             Type type = new TypeToken<MsgNotify<JsonObject>>() {
@@ -146,19 +143,9 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
 
     public void onStartUpdate(View view) {
         if (isWindowLocked()) return;
-        String hostStr = mBind.etHost.getText().toString();
-        String portStr = mBind.etPort.getText().toString();
-        String filePathStr = mBind.etFilePath.getText().toString();
-        if (TextUtils.isEmpty(hostStr)) {
-            ToastUtils.showToast(this, R.string.mqtt_verify_host);
-            return;
-        }
-        if (TextUtils.isEmpty(portStr) || Integer.parseInt(portStr) < 1 || Integer.parseInt(portStr) > 65535) {
-            ToastUtils.showToast(this, R.string.mqtt_verify_port_empty);
-            return;
-        }
-        if (TextUtils.isEmpty(filePathStr)) {
-            ToastUtils.showToast(this, R.string.mqtt_verify_file_path);
+        String firmwareFileUrlStr = mBind.etFirmwareFileUrl.getText().toString();
+        if (TextUtils.isEmpty(firmwareFileUrlStr)) {
+            ToastUtils.showToast(this, R.string.mqtt_verify_firmware_file_url);
             return;
         }
         if (!MQTTSupport.getInstance().isConnected()) {
@@ -184,12 +171,10 @@ public class OTAActivity extends BaseActivity<ActivityOtaRemoteBinding> {
         }
     }
 
-    private void setOTA(String host, int port, String filePath) {
+    private void setOTA(String firmwareFileUrlStr) {
         int msgId = MQTTConstants.CONFIG_MSG_ID_OTA;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("host", host);
-        jsonObject.addProperty("port", port);
-        jsonObject.addProperty("file", filePath);
+        jsonObject.addProperty("firmware_url", firmwareFileUrlStr);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
