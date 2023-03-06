@@ -3,6 +3,7 @@ package com.moko.mkremotegw.activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputFilter;
@@ -23,7 +24,6 @@ import com.moko.mkremotegw.base.BaseActivity;
 import com.moko.mkremotegw.databinding.ActivityDeviceSettingRemoteBinding;
 import com.moko.mkremotegw.db.DBTools;
 import com.moko.mkremotegw.dialog.AlertMessageDialog;
-import com.moko.mkremotegw.dialog.BottomDialog;
 import com.moko.mkremotegw.dialog.CustomDialog;
 import com.moko.mkremotegw.entity.MQTTConfig;
 import com.moko.mkremotegw.entity.MokoDevice;
@@ -44,7 +44,8 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+
+import androidx.core.content.ContextCompat;
 
 public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRemoteBinding> {
     private final String FILTER_ASCII = "[ -~]*";
@@ -56,6 +57,8 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
 
     private Handler mHandler;
     private InputFilter filter;
+
+    private boolean mIsAdvStateOpen;
 
     @Override
     protected void onCreate() {
@@ -71,6 +74,12 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
         mHandler = new Handler(Looper.getMainLooper());
+        mHandler.postDelayed(() -> {
+            dismissLoadingProgressDialog();
+            finish();
+        }, 30 * 1000);
+        showLoadingProgressDialog();
+        getAdvState();
     }
 
     @Override
@@ -94,6 +103,21 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             e.printStackTrace();
             return;
         }
+        if (msg_id == MQTTConstants.READ_MSG_ID_ADV_STATE) {
+            Type type = new TypeToken<MsgReadResult<JsonObject>>() {
+            }.getType();
+            MsgReadResult<JsonObject> result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            int advState = result.data.get("adv_state").getAsInt();
+            mIsAdvStateOpen = advState == 1;
+            Drawable dra = ContextCompat.getDrawable(this, advState == 0 ?
+                    R.drawable.ic_cb_close : R.drawable.ic_cb_open);
+            dra.setBounds(0, 0, dra.getIntrinsicWidth(), dra.getIntrinsicHeight());;
+            mBind.tvAdvState.setCompoundDrawables(null, null, dra, null);
+        }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_REBOOT) {
             Type type = new TypeToken<MsgConfigResult>() {
             }.getType();
@@ -104,6 +128,26 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
                 ToastUtils.showToast(this, "Set up succeed");
+            } else {
+                ToastUtils.showToast(this, "Set up failed");
+            }
+        }
+        if (msg_id == MQTTConstants.CONFIG_MSG_ID_ADV_SWITCH) {
+            Type type = new TypeToken<MsgConfigResult>() {
+            }.getType();
+            MsgConfigResult result = new Gson().fromJson(message, type);
+            if (!mMokoDevice.mac.equalsIgnoreCase(result.device_info.mac))
+                return;
+            dismissLoadingProgressDialog();
+            mHandler.removeMessages(0);
+            if (result.result_code == 0) {
+                ToastUtils.showToast(this, "Set up succeed");
+                mHandler.postDelayed(() -> {
+                    dismissLoadingProgressDialog();
+                    finish();
+                }, 30 * 1000);
+                showLoadingProgressDialog();
+                getAdvState();
             } else {
                 ToastUtils.showToast(this, "Set up failed");
             }
@@ -284,6 +328,56 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         startActivity(i);
     }
 
+    public void onAdvSettings(View view) {
+        if (isWindowLocked())
+            return;
+        if (mIsAdvStateOpen) {
+            if (!MQTTSupport.getInstance().isConnected()) {
+                ToastUtils.showToast(this, R.string.network_error);
+                return;
+            }
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                ToastUtils.showToast(this, "Set up failed");
+            }, 30 * 1000);
+            showLoadingProgressDialog();
+            setAdvState(0, 1);
+            return;
+        }
+        View content = LayoutInflater.from(this).inflate(R.layout.dialog_adv_times, null);
+        final EditText etAdvTimes = content.findViewById(R.id.et_adv_times);
+        CustomDialog customDialog = new CustomDialog.Builder(this)
+                .setContentView(content)
+                .setPositiveButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .setNegativeButton(R.string.confirm, (dialog, which) -> {
+                    String advTimesStr = etAdvTimes.getText().toString();
+                    if (TextUtils.isEmpty(advTimesStr)) {
+                        ToastUtils.showToast(DeviceSettingActivity.this, "Advertising time can't be blank");
+                        return;
+                    }
+                    int advTimes = Integer.parseInt(advTimesStr);
+                    if (advTimes < 1 || advTimes > 10) {
+                        ToastUtils.showToast(DeviceSettingActivity.this, "Advertising time range is 1-10");
+                        return;
+                    }
+                    if (!MQTTSupport.getInstance().isConnected()) {
+                        ToastUtils.showToast(this, R.string.network_error);
+                        return;
+                    }
+                    mHandler.postDelayed(() -> {
+                        dismissLoadingProgressDialog();
+                        ToastUtils.showToast(this, "Set up failed");
+                    }, 30 * 1000);
+                    showLoadingProgressDialog();
+                    setAdvState(1, advTimes);
+                    dialog.dismiss();
+                })
+                .create();
+        customDialog.show();
+        etAdvTimes.postDelayed(() -> showKeyboard(etAdvTimes), 300);
+
+    }
+
     public void onOTA(View view) {
         if (isWindowLocked())
             return;
@@ -319,6 +413,30 @@ public class DeviceSettingActivity extends BaseActivity<ActivityDeviceSettingRem
         Intent i = new Intent(this, DeviceInfoActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
+    }
+
+    private void getAdvState() {
+        int msgId = MQTTConstants.READ_MSG_ID_ADV_STATE;
+        String message = assembleReadCommon(msgId, mMokoDevice.mac);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void setAdvState(int advSwitch, int time) {
+        int msgId = MQTTConstants.CONFIG_MSG_ID_ADV_SWITCH;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("adv_switch", advSwitch);
+        jsonObject.addProperty("adv_time", time);
+        String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
+        try {
+            MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 
     public void onRebootDevice(View view) {

@@ -156,6 +156,22 @@
                 android:textSize="15sp" />
 
             <TextView
+                android:id="@+id/tv_adv_state"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="1dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:drawableRight="@drawable/ic_cb_close"
+                android:gravity="center_vertical"
+                android:onClick="onAdvSettings"
+                android:paddingLeft="12dp"
+                android:paddingRight="12dp"
+                android:text="Advertise settings"
+                android:textColor="@color/black_333333"
+                android:textSize="15sp" />
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginTop="12dp"
