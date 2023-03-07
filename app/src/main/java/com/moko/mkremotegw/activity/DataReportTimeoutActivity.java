@@ -84,7 +84,7 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
             int timeout = result.data.get("timeout").getAsInt();
-            mBind.etDataReportTimeout.setText(MokoUtils.getDecimalFormat("0.#").format(timeout * 0.02f));
+            mBind.etDataReportTimeout.setText(String.valueOf(timeout));
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_DATA_REPORT_TIMEOUT) {
             Type type = new TypeToken<MsgConfigResult>() {
@@ -142,7 +142,7 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
             return;
         }
         int timeout = Integer.parseInt(timeoutStr);
-        if (timeout > 60) {
+        if (timeout < 100 || timeout > 3000) {
             ToastUtils.showToast(this, "Para Error");
             return;
         }
@@ -155,6 +155,6 @@ public class DataReportTimeoutActivity extends BaseActivity<ActivityDataReportTi
             ToastUtils.showToast(this, "Set up failed");
         }, 30 * 1000);
         showLoadingProgressDialog();
-        setDataReportTimeout(timeout * 50);
+        setDataReportTimeout(timeout);
     }
 }

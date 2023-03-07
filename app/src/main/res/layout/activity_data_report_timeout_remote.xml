@@ -49,9 +49,9 @@
         android:layout_marginLeft="12dp"
         android:layout_marginTop="12dp"
         android:layout_marginRight="12dp"
-        android:hint="0-60，unit: 50ms"
+        android:hint="100-3000，unit: ms"
         android:inputType="number"
-        android:maxLength="2"
+        android:maxLength="4"
         android:paddingLeft="5dp"
         android:paddingRight="5dp"
         android:singleLine="true"
@@ -65,7 +65,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_margin="12dp"
-        android:text="This value defines the time for the gateway to packet the scanning data. A value of 0 means that the gateway will report the scanning data immediately without packeting the scanning data."
+        android:text="This value defines the time for the gateway to packet the Beacon data. If the gateway doesn't get the next beacon data in the timeout, it will packet the current beacon data and send to cloud."
         android:textColor="@color/black_333333"
         android:textSize="13sp" />
 </LinearLayout>
