@@ -79,7 +79,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
     public Handler mHandler;
 
-    private InputFilter filter;
+    public InputFilter filter;
 
     private String expertFilePath;
     private boolean isFileError;
@@ -262,15 +262,28 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
                 mqttDeviceConfig.lwtRetain = lwtFragment.getLwtRetain();
                 mqttDeviceConfig.lwtTopic = lwtFragment.getTopic();
                 mqttDeviceConfig.lwtPayload = lwtFragment.getPayload();
-                if (sslFragment.getConnectMode() > 1) {
-                    XLog.i("升级Mqtt证书");
-                    mHandler.postDelayed(() -> {
-                        dismissLoadingProgressDialog();
-                        finish();
-                    }, 50 * 1000);
-                    showLoadingProgressDialog();
-                    setMqttCertFile();
-                }
+                if (sslFragment.getConnectMode() < 2)
+                    return;
+                String caFileUrl = sslFragment.getCAUrl();
+                String certFileUrl = sslFragment.getClientCertUrl();
+                String keyFileUrl = sslFragment.getClientKeyUrl();
+                // 若证书类型是CA certificate file且CA证书为空，不发送证书更新指令
+                if (sslFragment.getConnectMode() == 2
+                        && TextUtils.isEmpty(caFileUrl))
+                    return;
+                // 若证书类型是Self signed certificates且所有证书都为空，不发送证书更新指令
+                if (sslFragment.getConnectMode() == 3
+                        && TextUtils.isEmpty(caFileUrl)
+                        && TextUtils.isEmpty(certFileUrl)
+                        && TextUtils.isEmpty(keyFileUrl))
+                    return;
+                XLog.i("升级Mqtt证书");
+                mHandler.postDelayed(() -> {
+                    dismissLoadingProgressDialog();
+                    finish();
+                }, 50 * 1000);
+                showLoadingProgressDialog();
+                setMqttCertFile();
             } else {
                 ToastUtils.showToast(this, "Set up failed");
             }
@@ -432,7 +445,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             ToastUtils.showToast(this, "Subscribed and published topic can't be same !");
             return true;
         }
-        if (!generalFragment.isValid() || !sslFragment.isValid() || !lwtFragment.isValid())
+        if (!generalFragment.isValid() || !lwtFragment.isValid())
             return true;
         return false;
     }

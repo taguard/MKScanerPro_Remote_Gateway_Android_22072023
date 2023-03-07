@@ -1,18 +1,16 @@
 package com.moko.mkremotegw.fragment;
 
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.text.InputFilter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 
-import com.moko.mkremotegw.R;
-import com.moko.mkremotegw.base.BaseActivity;
+import com.moko.mkremotegw.activity.ModifyMQTTSettingsActivity;
 import com.moko.mkremotegw.databinding.FragmentSslDeviceUrlBinding;
 import com.moko.mkremotegw.dialog.BottomDialog;
-import com.moko.mkremotegw.utils.ToastUtils;
 
 import java.util.ArrayList;
 
@@ -24,7 +22,7 @@ public class SSLDeviceUrlFragment extends Fragment {
     private FragmentSslDeviceUrlBinding mBind;
 
 
-    private BaseActivity activity;
+    private ModifyMQTTSettingsActivity activity;
 
     private int mConnectMode = 0;
 
@@ -54,7 +52,7 @@ public class SSLDeviceUrlFragment extends Fragment {
                              Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
         mBind = FragmentSslDeviceUrlBinding.inflate(inflater, container, false);
-        activity = (BaseActivity) getActivity();
+        activity = (ModifyMQTTSettingsActivity) getActivity();
         mBind.clCertificate.setVisibility(mConnectMode > 0 ? View.VISIBLE : View.GONE);
         mBind.cbSsl.setChecked(mConnectMode > 0);
         mBind.cbSsl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -72,6 +70,9 @@ public class SSLDeviceUrlFragment extends Fragment {
         values.add("CA signed server certificate");
         values.add("CA certificate file");
         values.add("Self signed certificates");
+        mBind.etCaUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), activity.filter});
+        mBind.etClientKeyUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), activity.filter});
+        mBind.etClientCertUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), activity.filter});
         if (mConnectMode > 0) {
             selected = mConnectMode - 1;
             mBind.etCaUrl.setText(caUrl);
@@ -186,33 +187,6 @@ public class SSLDeviceUrlFragment extends Fragment {
             }
         });
         dialog.show(activity.getSupportFragmentManager());
-    }
-
-
-    public boolean isValid() {
-        final String caFile = mBind.etCaUrl.getText().toString();
-        final String clientKeyFile = mBind.etClientKeyUrl.getText().toString();
-        final String clientCertFile = mBind.etClientCertUrl.getText().toString();
-        if (mConnectMode == 2) {
-            if (TextUtils.isEmpty(caFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
-                return false;
-            }
-        } else if (mConnectMode == 3) {
-            if (TextUtils.isEmpty(caFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
-                return false;
-            }
-            if (TextUtils.isEmpty(clientKeyFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_client_key));
-                return false;
-            }
-            if (TextUtils.isEmpty(clientCertFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_client_cert));
-                return false;
-            }
-        }
-        return true;
     }
 
     public int getConnectMode() {

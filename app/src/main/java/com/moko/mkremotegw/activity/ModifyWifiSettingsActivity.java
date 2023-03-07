@@ -179,16 +179,28 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             mHandler.removeMessages(0);
             if (result.result_code == 0) {
                 ToastUtils.showToast(this, "Set up succeed");
-                if (mSecuritySelected != 0 &&
-                        (mEAPTypeSelected == 2 || mBind.cbVerifyServer.isChecked())) {
-                    XLog.i("升级Wifi证书");
-                    mHandler.postDelayed(() -> {
-                        dismissLoadingProgressDialog();
-                        finish();
-                    }, 50 * 1000);
-                    showLoadingProgressDialog();
-                    setWifiCertFile();
-                }
+                if (mSecuritySelected == 0)
+                    return;
+                String caFileUrl = mBind.etCaFileUrl.getText().toString();
+                String certFileUrl = mBind.etCertFileUrl.getText().toString();
+                String keyFileUrl = mBind.etKeyFileUrl.getText().toString();
+                // 若EAP类型不是TLS且CA证书为空，不发送证书更新指令
+                if (mEAPTypeSelected != 2
+                        && TextUtils.isEmpty(caFileUrl))
+                    return;
+                // 若EAP类型是TLS且所有证书都为空，不发送证书更新指令
+                if (mEAPTypeSelected == 2
+                        && TextUtils.isEmpty(caFileUrl)
+                        && TextUtils.isEmpty(certFileUrl)
+                        && TextUtils.isEmpty(keyFileUrl))
+                    return;
+                XLog.i("升级Wifi证书");
+                mHandler.postDelayed(() -> {
+                    dismissLoadingProgressDialog();
+                    finish();
+                }, 50 * 1000);
+                showLoadingProgressDialog();
+                setWifiCertFile();
             } else {
                 ToastUtils.showToast(this, "Set up failed");
             }
@@ -342,14 +354,14 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
         String ssid = mBind.etSsid.getText().toString();
         if (TextUtils.isEmpty(ssid))
             return true;
-        if (mSecuritySelected != 0) {
-            if (mEAPTypeSelected != 2 && !mBind.cbVerifyServer.isChecked()) {
-                return false;
-            }
-            String caFileUrl = mBind.etCaFileUrl.getText().toString();
-            if (TextUtils.isEmpty(caFileUrl))
-                return true;
-        }
+//        if (mSecuritySelected != 0) {
+//            if (mEAPTypeSelected != 2 && !mBind.cbVerifyServer.isChecked()) {
+//                return false;
+//            }
+//            String caFileUrl = mBind.etCaFileUrl.getText().toString();
+//            if (TextUtils.isEmpty(caFileUrl))
+//                return true;
+//        }
         return false;
     }
 
