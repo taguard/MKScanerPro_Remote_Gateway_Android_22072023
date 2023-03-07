@@ -14,10 +14,11 @@ import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
 
 public class LoadingMessageDialog extends MokoBaseDialog<DialogLoadingMessageBinding> {
-        private static final int DIALOG_DISMISS_DELAY_TIME = 5000;
+    private static final int DIALOG_DISMISS_DELAY_TIME = 5000;
     public static final String TAG = LoadingMessageDialog.class.getSimpleName();
     private String message;
     private int messageId = -1;
+    private boolean isAutoDismiss = true;
 
     @Override
     protected DialogLoadingMessageBinding getViewBind(LayoutInflater inflater, ViewGroup container) {
@@ -37,6 +38,8 @@ public class LoadingMessageDialog extends MokoBaseDialog<DialogLoadingMessageBin
             message = getString(R.string.setting_syncing);
         }
         mBind.tvLoadingMessage.setText(message);
+        if (!isAutoDismiss)
+            return;
         mBind.tvLoadingMessage.postDelayed(() -> {
             if (isVisible()) {
                 dismissAllowingStateLoss();
@@ -93,19 +96,25 @@ public class LoadingMessageDialog extends MokoBaseDialog<DialogLoadingMessageBin
 
     public void setMessage(String message) {
         this.message = message;
+        if (mBind == null) return;
+        mBind.tvLoadingMessage.setText(message);
     }
 
     public void setMessage(@StringRes int messageId) {
         this.messageId = messageId;
     }
 
-    private DialogDissmissCallback callback;
+    public void setAutoDismiss(boolean autoDismiss) {
+        isAutoDismiss = autoDismiss;
+    }
 
-    public void setDialogDismissCallback(final DialogDissmissCallback callback) {
+    private DialogDismissCallback callback;
+
+    public void setDialogDismissCallback(final DialogDismissCallback callback) {
         this.callback = callback;
     }
 
-    public interface DialogDissmissCallback {
+    public interface DialogDismissCallback {
         void onOvertimeDismiss();
 
         void onDismiss();

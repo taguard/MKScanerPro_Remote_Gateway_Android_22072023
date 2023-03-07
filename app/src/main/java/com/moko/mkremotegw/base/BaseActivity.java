@@ -86,13 +86,19 @@ public abstract class BaseActivity<VM extends ViewBinding> extends FragmentActiv
             mLoadingDialog.dismissAllowingStateLoss();
     }
 
-    private LoadingMessageDialog mLoadingMessageDialog;
+    public LoadingMessageDialog mLoadingMessageDialog;
 
     public void showLoadingMessageDialog(String message) {
         mLoadingMessageDialog = new LoadingMessageDialog();
         mLoadingMessageDialog.setMessage(message);
         mLoadingMessageDialog.show(getSupportFragmentManager());
+    }
 
+    public void showLoadingMessageDialog(String message, boolean isAutoDismiss) {
+        mLoadingMessageDialog = new LoadingMessageDialog();
+        mLoadingMessageDialog.setMessage(message);
+        mLoadingMessageDialog.setAutoDismiss(isAutoDismiss);
+        mLoadingMessageDialog.show(getSupportFragmentManager());
     }
 
     public void dismissLoadingMessageDialog() {
@@ -116,7 +122,6 @@ public abstract class BaseActivity<VM extends ViewBinding> extends FragmentActiv
         if (!online)
             finish();
     }
-
 
 
     public String assembleReadCommon(int msgId, String mac) {

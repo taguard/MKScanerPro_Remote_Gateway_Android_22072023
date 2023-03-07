@@ -34,6 +34,9 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+
 public class BXPButtonInfoActivity extends BaseActivity<ActivityBxpButtonInfoBinding> {
 
     private MokoDevice mMokoDevice;
@@ -194,6 +197,23 @@ public class BXPButtonInfoActivity extends BaseActivity<ActivityBxpButtonInfoBin
         }
     }
 
+    public void onDFU(View view) {
+        if (isWindowLocked()) return;
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
+            return;
+        }
+        Intent intent = new Intent(this, BeaconDFUActivity.class);
+        intent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
+        intent.putExtra(AppConstants.EXTRA_KEY_MAC, mBXPButtonInfo.mac);
+        startBeaconDFU.launch(intent);
+    }
+    private final ActivityResultLauncher<Intent> startBeaconDFU = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+        if (result.getResultCode() == RESULT_OK) {
+            ToastUtils.showToast(this, "Bluetooth disconnect");
+            finish();
+        }
+    });
 
     public void onReadBXPButtonStatus(View view) {
         if (isWindowLocked()) return;

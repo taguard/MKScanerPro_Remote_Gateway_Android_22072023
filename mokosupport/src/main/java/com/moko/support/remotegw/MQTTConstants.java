@@ -42,6 +42,7 @@ public class MQTTConstants {
     public static final int CONFIG_MSG_ID_BLE_BXP_BUTTON_STATUS = 1104;
     public static final int CONFIG_MSG_ID_BLE_BXP_BUTTON_DISMISS_ALARM = 1106;
     public static final int CONFIG_MSG_ID_BLE_DISCONNECT = 1200;
+    public static final int CONFIG_MSG_ID_BLE_DFU = 1202;
     public static final int CONFIG_MSG_ID_BLE_OTHER_CONNECT = 1300;
     public static final int CONFIG_MSG_ID_BLE_OTHER_INFO = 1303;
     public static final int CONFIG_MSG_ID_BLE_OTHER_CHANGE_NOTIFY_ENABLE = 1305;
@@ -91,6 +92,8 @@ public class MQTTConstants {
     public static final int NOTIFY_MSG_ID_BLE_BXP_BUTTON_STATUS = 3105;
     public static final int NOTIFY_MSG_ID_BLE_BXP_BUTTON_DISMISS_ALARM = 3107;
     public static final int NOTIFY_MSG_ID_BLE_BXP_BUTTON_DISCONNECTED = 3108;
+    public static final int NOTIFY_MSG_ID_BLE_DFU_PERCENT = 3203;
+    public static final int NOTIFY_MSG_ID_BLE_DFU_RESULT = 3204;
     public static final int NOTIFY_MSG_ID_BLE_OTHER_CONNECT_RESULT = 3301;
     public static final int NOTIFY_MSG_ID_BLE_OTHER_DISCONNECTED = 3302;
     public static final int NOTIFY_MSG_ID_BLE_OTHER_INFO = 3304;
