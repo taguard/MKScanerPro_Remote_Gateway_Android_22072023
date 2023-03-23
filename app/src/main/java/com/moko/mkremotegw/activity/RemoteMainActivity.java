@@ -401,11 +401,6 @@ public class RemoteMainActivity extends BaseActivity<ActivityMainRemoteBinding> 
             return;
         }
         // 收到任何信息都认为在线，除了遗愿信息
-        if (msg_id != MQTTConstants.NOTIFY_MSG_ID_NETWORKING_STATUS
-                && msg_id != MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT
-                && msg_id != MQTTConstants.NOTIFY_MSG_ID_OFFLINE
-                && msg_id != MQTTConstants.NOTIFY_MSG_ID_BUTTON_RESET)
-            return;
         if (msg_id == MQTTConstants.NOTIFY_MSG_ID_BLE_SCAN_RESULT && isDurationVoid())
             return;
         Type type = new TypeToken<MsgNotify<Object>>() {

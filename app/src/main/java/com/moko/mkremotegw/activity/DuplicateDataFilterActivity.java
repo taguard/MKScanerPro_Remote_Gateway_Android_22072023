@@ -118,7 +118,7 @@ public class DuplicateDataFilterActivity extends BaseActivity<ActivityDuplicateD
         super.offline(event, mMokoDevice.mac);
     }
 
-    public void onBack(View view) {
+    public void back(View view) {
         finish();
     }
 

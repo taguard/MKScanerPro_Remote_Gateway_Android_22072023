@@ -199,7 +199,7 @@ public class MqttSettingsActivity extends BaseActivity<ActivityMqttDeviceRemoteB
                                 }
                             }
                             if (flag == 0x00) {
-                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 5));
+                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 3, 5));
                                 // read
                                 switch (configKeyEnum) {
                                     case KEY_MQTT_USERNAME:

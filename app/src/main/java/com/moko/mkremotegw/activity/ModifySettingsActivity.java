@@ -54,6 +54,7 @@ public class ModifySettingsActivity extends BaseActivity<ActivityModifySettingsB
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mAppTopic = TextUtils.isEmpty(appMqttConfig.topicPublish) ? mMokoDevice.topicSubscribe : appMqttConfig.topicPublish;
+        mqttDeviceConfig = new MQTTConfig();
         mHandler = new Handler(Looper.getMainLooper());
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();

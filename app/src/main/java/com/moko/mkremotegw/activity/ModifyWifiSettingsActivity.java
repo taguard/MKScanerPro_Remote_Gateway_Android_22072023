@@ -146,7 +146,6 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                 mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
-                mBind.tvCertTips.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             }
         }
         if (msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
@@ -299,7 +298,6 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                 mBind.clDomainId.setVisibility(View.GONE);
                 mBind.clCert.setVisibility(View.GONE);
                 mBind.clKey.setVisibility(View.GONE);
-                mBind.tvCertTips.setVisibility(View.GONE);
             } else {
                 if (mEAPTypeSelected != 2) {
                     mBind.clCa.setVisibility(mBind.cbVerifyServer.isChecked() ? View.VISIBLE : View.GONE);
@@ -312,7 +310,6 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
                 mBind.clDomainId.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
                 mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
-                mBind.tvCertTips.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             }
         });
         dialog.show(getSupportFragmentManager());
@@ -336,7 +333,6 @@ public class ModifyWifiSettingsActivity extends BaseActivity<ActivityModifyWifiS
             }
             mBind.clCert.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
             mBind.clKey.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
-            mBind.tvCertTips.setVisibility(mEAPTypeSelected == 2 ? View.VISIBLE : View.GONE);
         });
         dialog.show(getSupportFragmentManager());
     }

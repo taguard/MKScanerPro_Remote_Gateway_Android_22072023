@@ -65,7 +65,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_margin="12dp"
-        android:text="This value defines the time how long the gateway disconnect from BLE device after it doesn't get any message from the server. A value of 0 means that the gateway will not disconnect the Beacon devices."
+        android:text="If the gateway doesn't get any downlink message from the cloud in the timeout, it will automatically disconnect from the Beacon.  A value of 0 means that no automatic disconnection."
         android:textColor="@color/black_333333"
         android:textSize="13sp" />
 </LinearLayout>

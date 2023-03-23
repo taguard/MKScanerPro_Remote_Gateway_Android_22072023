@@ -111,7 +111,7 @@ public class ScannerFilterActivity extends BaseActivity<ActivityScannerFilterBin
                                 }
                             }
                             if (flag == 0x00) {
-                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 4, 5));
+                                int length = MokoUtils.toInt(Arrays.copyOfRange(value, 3, 5));
                                 // read
                                 switch (configKeyEnum) {
                                     case KEY_FILTER_NAME_RULES:

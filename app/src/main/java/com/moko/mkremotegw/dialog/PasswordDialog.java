@@ -54,7 +54,7 @@ public class PasswordDialog extends MokoBaseDialog<DialogPasswordRemoteBinding> 
             @Override
             public void afterTextChanged(Editable s) {
                 int length = s.toString().length();
-                mBind.tvPasswordEnsure.setEnabled(length > 6);
+                mBind.tvPasswordEnsure.setEnabled(length >= 6);
             }
         });
         if (!TextUtils.isEmpty(password)) {
