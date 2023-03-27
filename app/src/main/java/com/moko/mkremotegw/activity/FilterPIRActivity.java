@@ -111,7 +111,7 @@ public class FilterPIRActivity extends BaseActivity<ActivityFilterPirBinding> {
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbPir.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbPir.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mDelayRespStatusSelected = result.data.get("delay_response_status").getAsInt();
             mBind.tvDelayRespStatus.setText(mDelayRespStatusValues.get(mDelayRespStatusSelected));
             mDoorStatusSelected = result.data.get("door_status").getAsInt();
@@ -191,7 +191,7 @@ public class FilterPIRActivity extends BaseActivity<ActivityFilterPirBinding> {
             minorMax = Integer.parseInt(minorMaxStr);
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_PIR;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbPir.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbPir.isChecked() ? 1 : 0);
         jsonObject.addProperty("delay_response_status", mDelayRespStatusSelected);
         jsonObject.addProperty("door_status", mDoorStatusSelected);
         jsonObject.addProperty("sensor_sensitivity", mSensorSensitivitySelected);

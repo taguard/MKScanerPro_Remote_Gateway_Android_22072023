@@ -92,7 +92,7 @@ public class FilterUrlActivity extends BaseActivity<ActivityFilterUrlBinding> {
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbUrl.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbUrl.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mBind.etUrl.setText(result.data.get("url").getAsString());
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_FILTER_URL) {
@@ -144,7 +144,7 @@ public class FilterUrlActivity extends BaseActivity<ActivityFilterUrlBinding> {
     private void saveParams() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_URL;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbUrl.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbUrl.isChecked() ? 1 : 0);
         jsonObject.addProperty("url", mBind.etUrl.getText().toString());
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {

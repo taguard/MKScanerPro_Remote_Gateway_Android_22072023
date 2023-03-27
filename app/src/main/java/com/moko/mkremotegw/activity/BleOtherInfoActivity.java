@@ -67,16 +67,16 @@ public class BleOtherInfoActivity extends BaseActivity<ActivityOtherInfoBinding>
         mBind.tvDeviceName.setText(mMokoDevice.name);
         mBleOtherChars = new ArrayList<>();
         String mac = mOtherDeviceInfo.mac;
-        for (int i = 0; i < mOtherDeviceInfo.service.size(); i++) {
-            BleService bleService = mOtherDeviceInfo.service.get(i);
+        for (int i = 0; i < mOtherDeviceInfo.service_array.size(); i++) {
+            BleService bleService = mOtherDeviceInfo.service_array.get(i);
             // Service
             BleOtherChar bleOtherService = new BleOtherChar();
             bleOtherService.mac = mac;
             bleOtherService.type = 0;
             bleOtherService.serviceUUID = bleService.service_uuid;
             mBleOtherChars.add(bleOtherService);
-            for (int j = 0; j < bleService.characteristic.size(); j++) {
-                BleCharacteristic characteristic = bleService.characteristic.get(j);
+            for (int j = 0; j < bleService.char_array.size(); j++) {
+                BleCharacteristic characteristic = bleService.char_array.get(j);
                 // Service
                 BleOtherChar bleOtherChar = new BleOtherChar();
                 bleOtherChar.mac = mac;
@@ -354,7 +354,7 @@ public class BleOtherInfoActivity extends BaseActivity<ActivityOtherInfoBinding>
         jsonObject.addProperty("mac", bleOtherChar.mac);
         jsonObject.addProperty("service_uuid", bleOtherChar.serviceUUID);
         jsonObject.addProperty("char_uuid", bleOtherChar.characteristicUUID);
-        jsonObject.addProperty("switch", bleOtherChar.characteristicNotifyStatus == 1 ? 0 : 1);
+        jsonObject.addProperty("switch_value", bleOtherChar.characteristicNotifyStatus == 1 ? 0 : 1);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);

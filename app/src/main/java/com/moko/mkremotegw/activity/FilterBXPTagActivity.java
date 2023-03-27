@@ -92,7 +92,7 @@ public class FilterBXPTagActivity extends BaseActivity<ActivityFilterBxpTagBindi
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbBxpTag.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbBxpTag.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mBind.cbPreciseMatch.setChecked(result.data.get("precise").getAsInt() == 1);
             mBind.cbReverseFilter.setChecked(result.data.get("reverse").getAsInt() == 1);
             JsonArray tagList = result.data.getAsJsonArray("tagid");
@@ -198,7 +198,7 @@ public class FilterBXPTagActivity extends BaseActivity<ActivityFilterBxpTagBindi
     private void saveParams() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_TAG;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbBxpTag.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbBxpTag.isChecked() ? 1 : 0);
         jsonObject.addProperty("precise", mBind.cbPreciseMatch.isChecked() ? 1 : 0);
         jsonObject.addProperty("reverse", mBind.cbReverseFilter.isChecked() ? 1 : 0);
         JsonArray macList = new JsonArray();

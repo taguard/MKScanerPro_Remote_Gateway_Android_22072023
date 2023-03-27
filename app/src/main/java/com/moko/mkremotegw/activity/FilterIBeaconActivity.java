@@ -82,7 +82,7 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbIbeacon.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbIbeacon.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mBind.etIbeaconUuid.setText(result.data.get("uuid").getAsString());
             mBind.etIbeaconMajorMin.setText(String.valueOf(result.data.get("min_major").getAsInt()));
             mBind.etIbeaconMajorMax.setText(String.valueOf(result.data.get("max_major").getAsInt()));
@@ -156,7 +156,7 @@ public class FilterIBeaconActivity extends BaseActivity<ActivityFilterIbeaconBin
             minorMax = Integer.parseInt(minorMaxStr);
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_IBEACON;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbIbeacon.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbIbeacon.isChecked() ? 1 : 0);
         jsonObject.addProperty("min_major", majorMin);
         jsonObject.addProperty("max_major", majorMax);
         jsonObject.addProperty("min_minor", minorMin);

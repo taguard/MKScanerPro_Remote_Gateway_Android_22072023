@@ -10,5 +10,5 @@ public class OtherDeviceInfo implements Serializable {
     public int result_code;
     public String result_msg;
     public int mtu;
-    public List<BleService> service;
+    public List<BleService> service_array;
 }

@@ -82,7 +82,7 @@ public class FilterUIDActivity extends BaseActivity<ActivityFilterUidBinding> {
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbUid.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbUid.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mBind.etUidNamespace.setText(result.data.get("namespace").getAsString());
             mBind.etUidInstanceId.setText(result.data.get("instance").getAsString());
         }
@@ -137,7 +137,7 @@ public class FilterUIDActivity extends BaseActivity<ActivityFilterUidBinding> {
     private void saveParams() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_UID;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbUid.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbUid.isChecked() ? 1 : 0);
         jsonObject.addProperty("namespace", mBind.etUidNamespace.getText().toString());
         jsonObject.addProperty("instance", mBind.etUidInstanceId.getText().toString());
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);

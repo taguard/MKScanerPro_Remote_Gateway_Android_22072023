@@ -92,7 +92,7 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncFromNtpBin
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbSyncSwitch.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbSyncSwitch.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mBind.etNtpServer.setText(result.data.get("server").getAsString());
         }
         if (msg_id == MQTTConstants.CONFIG_MSG_ID_NTP_SERVER) {
@@ -144,7 +144,7 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncFromNtpBin
     private void setNtpServer() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_NTP_SERVER;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbSyncSwitch.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbSyncSwitch.isChecked() ? 1 : 0);
         jsonObject.addProperty("server", mBind.etNtpServer.getText().toString());
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {

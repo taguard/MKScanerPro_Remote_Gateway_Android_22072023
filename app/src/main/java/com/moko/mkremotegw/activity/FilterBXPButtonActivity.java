@@ -84,7 +84,7 @@ public class FilterBXPButtonActivity extends BaseActivity<ActivityFilterBxpButto
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
 
-            mBind.cbEnable.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbEnable.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mBind.cbSinglePressMode.setChecked(result.data.get("single_press").getAsInt() == 1);
             mBind.cbDoublePressMode.setChecked(result.data.get("double_press").getAsInt() == 1);
             mBind.cbLongPressMode.setChecked(result.data.get("long_press").getAsInt() == 1);
@@ -119,7 +119,7 @@ public class FilterBXPButtonActivity extends BaseActivity<ActivityFilterBxpButto
     private void setFilterBXPButton() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_BUTTON;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbEnable.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbEnable.isChecked() ? 1 : 0);
         jsonObject.addProperty("single_press", mBind.cbSinglePressMode.isChecked() ? 1 : 0);
         jsonObject.addProperty("double_press", mBind.cbDoublePressMode.isChecked() ? 1 : 0);
         jsonObject.addProperty("long_press",  mBind.cbLongPressMode.isChecked() ? 1 : 0);

@@ -91,7 +91,7 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbTlm.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbTlm.setChecked(result.data.get("switch_value").getAsInt() == 1);
             mSelected = result.data.get("tlm_version").getAsInt();
             mBind.tvTlmVersion.setText(mValues.get(mSelected));
         }
@@ -144,7 +144,7 @@ public class FilterTLMActivity extends BaseActivity<ActivityFilterTlmBinding> {
     private void saveParams() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_TLM;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbTlm.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbTlm.isChecked() ? 1 : 0);
         jsonObject.addProperty("tlm_version", mSelected);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {

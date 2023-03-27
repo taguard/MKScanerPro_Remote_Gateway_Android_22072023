@@ -181,7 +181,7 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
         isBXPDeviceInfoOpen = !isBXPDeviceInfoOpen;
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_DEVICE_INFO;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", isBXPDeviceInfoOpen ? 1 : 0);
+        jsonObject.addProperty("switch_value", isBXPDeviceInfoOpen ? 1 : 0);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
@@ -194,7 +194,7 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
         isBXPAccOpen = !isBXPAccOpen;
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_ACC;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", isBXPAccOpen ? 1 : 0);
+        jsonObject.addProperty("switch_value", isBXPAccOpen ? 1 : 0);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);
@@ -207,7 +207,7 @@ public class FilterRawDataSwitchActivity extends BaseActivity<ActivityFilterRawD
         isBXPTHOpen = !isBXPTHOpen;
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_BXP_TH;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", isBXPTHOpen ? 1 : 0);
+        jsonObject.addProperty("switch_value", isBXPTHOpen ? 1 : 0);
         String message = assembleWriteCommonData(msgId, mMokoDevice.mac, jsonObject);
         try {
             MQTTSupport.getInstance().publish(mAppTopic, message, msgId, appMqttConfig.qos);

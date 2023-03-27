@@ -96,7 +96,7 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
                 return;
             dismissLoadingProgressDialog();
             mHandler.removeMessages(0);
-            mBind.cbOther.setChecked(result.data.get("switch").getAsInt() == 1);
+            mBind.cbOther.setChecked(result.data.get("switch_value").getAsInt() == 1);
             int relationship = result.data.get("relation").getAsInt();
             if (relationship < 1) {
                 mValues = new ArrayList<>();
@@ -277,7 +277,7 @@ public class FilterOtherActivity extends BaseActivity<ActivityFilterOtherBinding
     private void saveParams() {
         int msgId = MQTTConstants.CONFIG_MSG_ID_FILTER_OTHER;
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("switch", mBind.cbOther.isChecked() ? 1 : 0);
+        jsonObject.addProperty("switch_value", mBind.cbOther.isChecked() ? 1 : 0);
         jsonObject.addProperty("relation", 0);
         if (filterOther.size() == 1) {
             jsonObject.addProperty("relation", 0);
