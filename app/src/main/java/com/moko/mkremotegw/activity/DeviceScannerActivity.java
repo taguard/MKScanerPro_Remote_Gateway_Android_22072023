@@ -188,33 +188,40 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
                 mHandler.removeMessages(0);
                 mokoBleScanner.stopScanDevice();
             }
-            // show password
-            final PasswordDialog dialog = new PasswordDialog();
-            dialog.setPassword(mSavedPassword);
-            dialog.setOnPasswordClicked(new PasswordDialog.PasswordClickListener() {
-                @Override
-                public void onEnsureClicked(String password) {
-                    if (!MokoSupport.getInstance().isBluetoothOpen()) {
-                        MokoSupport.getInstance().enableBluetooth();
-                        return;
-                    }
-                    XLog.i(password);
-                    mPassword = password;
-                    mSelectedDeviceType = deviceInfo.deviceType;
-                    if (animation != null) {
-                        mHandler.removeMessages(0);
-                        mokoBleScanner.stopScanDevice();
-                    }
-                    showLoadingProgressDialog();
-                    mBind.ivRefresh.postDelayed(() -> MokoSupport.getInstance().connDevice(deviceInfo.mac), 500);
-                }
 
-                @Override
-                public void onDismiss() {
+            // open password notify and set password
+            List<OrderTask> orderTasks = new ArrayList<>();
+            orderTasks.add(OrderTaskAssembler.setPassword("Moko4321"));
 
-                }
-            });
-            dialog.show(getSupportFragmentManager());
+            MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
+
+//            // show password
+//            final PasswordDialog dialog = new PasswordDialog();
+//            dialog.setPassword(mSavedPassword);
+//            dialog.setOnPasswordClicked(new PasswordDialog.PasswordClickListener() {
+//                @Override
+//                public void onEnsureClicked(String password) {
+//                    if (!MokoSupport.getInstance().isBluetoothOpen()) {
+//                        MokoSupport.getInstance().enableBluetooth();
+//                        return;
+//                    }
+//                    XLog.i(password);
+//                    mPassword = password;
+//                    mSelectedDeviceType = deviceInfo.deviceType;
+//                    if (animation != null) {
+//                        mHandler.removeMessages(0);
+//                        mokoBleScanner.stopScanDevice();
+//                    }
+//                    showLoadingProgressDialog();
+//                    mBind.ivRefresh.postDelayed(() -> MokoSupport.getInstance().connDevice(deviceInfo.mac), 500);
+//                }
+//
+//                @Override
+//                public void onDismiss() {
+//
+//                }
+//            });
+//            dialog.show(getSupportFragmentManager());
         }
     }
 

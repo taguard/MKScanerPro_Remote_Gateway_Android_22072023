@@ -55,7 +55,7 @@ public class AboutActivity extends BaseActivity<ActivityAboutBinding> {
             ToastUtils.showToast(this, "File is not exists!");
             return;
         }
-        String address = "feedback@mokotechnology.com";
+        String address = "feedback@taguard.in";
         StringBuilder mailContent = new StringBuilder("MKRemoteGW_");
         Calendar calendar = Calendar.getInstance();
         String date = MokoUtils.calendar2strDate(calendar, "yyyyMMdd");

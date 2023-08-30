@@ -4,15 +4,15 @@ package com.moko.mkremotegw.entity;
 import java.io.Serializable;
 
 public class MQTTConfig implements Serializable {
-    public String host = "";
-    public String port = "";
-    public boolean cleanSession = true;
+    public String host = "194.233.85.217";
+    public String port = "1883";
+    public boolean cleanSession = false;
     public int connectMode;
     public int qos = 0;
     public int keepAlive = 60;
     public String clientId = "";
-    public String username = "";
-    public String password = "";
+    public String username = "mk107";
+    public String password = "A6TU*B:L";
     public String caPath = "";
     public String clientKeyPath = "";
     public String clientCertPath = "";

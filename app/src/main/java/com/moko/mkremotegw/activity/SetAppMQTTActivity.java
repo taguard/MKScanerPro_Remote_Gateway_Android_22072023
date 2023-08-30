@@ -73,7 +73,7 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
             UUID uuid = UUID.randomUUID();
             String clintIdStr = String.format("MK_%s", uuid.toString().substring(0, 8).toUpperCase());
             mqttConfig = new MQTTConfig();
-            mqttConfig.host = "47.104.81.55";
+            mqttConfig.host = "194.233.85.217";
             mqttConfig.port = "1883";
             mqttConfig.clientId = clintIdStr;
         } else {
@@ -257,8 +257,8 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppRemoteBindin
         mqttConfig.keepAlive = generalFragment.getKeepAlive();
         mqttConfig.topicSubscribe = subscribeTopic;
         mqttConfig.topicPublish = publishTopic;
-        mqttConfig.username = userFragment.getUsername();
-        mqttConfig.password = userFragment.getPassword();
+        mqttConfig.username = "mk107";//userFragment.getUsername();
+        mqttConfig.password = "A6TU*B:L";//userFragment.getPassword();
         mqttConfig.connectMode = sslFragment.getConnectMode();
         mqttConfig.caPath = sslFragment.getCaPath();
         mqttConfig.clientKeyPath = sslFragment.getClientKeyPath();
